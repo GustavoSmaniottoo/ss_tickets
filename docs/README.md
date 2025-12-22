@@ -16,10 +16,6 @@
 | **06. Frontend** | Interface Web para abertura e gestão de tickets | 📅 Pendente |
 | **07. Automação QA** | Cobertura de testes end-to-end com Cypress | 📅 Pendente |
 
-## Progresso Atual: Módulo de Infraestrutura e Conexão
-
-Nesta etapa, o foco foi garantir a portabilidade do ambiente entre diferentes sistemas operacionais (Windows e Linux Mint).
-
 ### Implementações Concluídas
 
 * **Ambiente de Dados:** Configuração de contentores Docker para PostgreSQL com script de inicialização automático via init.sql.
@@ -58,12 +54,12 @@ Acesse os documentos através dos links relativos abaixo:
 ## Instruções para Execução
 
 1. Execute o ambiente de banco de dados:
-   >docker-compose up -d
+   `docker-compose up -d`
 
 2. Instale as dependências base (express, pg, dotenv):
-   >npm install express pg dotenv
+   `npm install express pg dotenv`
 
 3. Configure o ficheiro .env com as credenciais definidas no docker-compose.
 
 4. Inicie a aplicação:
-   >node src/app.js
+   `node src/app.js`

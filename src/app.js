@@ -1,9 +1,13 @@
 const express = require('express');
 const db = require('./config/db'); // Importa a conexão que você criou
 const app = express();
+const ticketRoutes = require('./routes/ticketRoutes');
+
 
 // Middleware: Diz ao Express para entender dados enviados em formato JSON
 app.use(express.json());
+
+app.use(ticketRoutes);
 
 // Rota de Teste: Vamos validar se o Express consegue falar com o Postgres
 app.get('/health', async (req, res) => {
@@ -21,5 +25,5 @@ app.get('/health', async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor da Smaniotto Solutions rodando em http://localhost:${PORT}`);
+  console.log(`Pra cima! Servidor da Smaniotto Solutions rodando em http://localhost:${PORT}`);
 });
