@@ -9,7 +9,9 @@ const ticketController = require('../controllers/ticketController');//importo o 
  * a '/' indica que a rota ja esta associada a /tickets no app.js em app.use('/tickets', ticketRoutes);*/
 router.post('/', ticketController.createTicket);
 
+router.get('/', ticketController.getTickets); //aqui eu crio a rota GET /tickets que chama a funcao getTickets do ticketController
 
+router.get('/:id', ticketController.getTicketById); //rota para buscar ticket por ID, o :id indica que é um parametro dinamico
 /**basicamente router.post recebe dois parametros:
  * o primeiro e a rota que sera associada
  * o segundo e a funcao que sera executada quando houver uma requisicao para aquela rota

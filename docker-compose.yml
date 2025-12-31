@@ -1,17 +1,26 @@
+# docker-compose.yml
+
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: postgres_ss_tickets
-    restart: always
+  db: # Nome do serviço dentro do Docker
+    image: postgres:15-alpine # Versão leve do PostgreSQL baseada em Alpine Linux
+    container_name: postgres_ss_tickets # Nome que aparecerá na sua lista de containers
+    restart: always # Garante que o banco ligue sozinho se o Docker reiniciar
+    
+    # Variáveis de Ambiente: Buscam os dados do seu arquivo .env por segurança
     environment:
       POSTGRES_USER: ${DB_USER}       
       POSTGRES_PASSWORD: ${DB_PASSWORD} 
       POSTGRES_DB: ${DB_NAME}
+      
     ports:
-      - "5432:5432"
+      - "5432:5432" # Mapeia a porta do computador para a porta do container
+      
     volumes:
+      # Copia seu script SQL para dentro do banco ao iniciar pela primeira vez
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Automação de tabelas
+      
+      # Persistência: Garante que seus tickets não sumam se o container for deletado
       - pgdata:/var/lib/postgresql/data
 
 volumes:
-  pgdata:
+  pgdata: # Declaração do volume para salvar os dados no disco físico do Windows
