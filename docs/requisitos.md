@@ -1,9 +1,4 @@
-# Especificação de Requisitos: SS Tickets (Pilot)
-
-**Projeto:** SS Tickets (Smaniotto Solutions)  
-**Objetivo:** Sistema de gestão de chamados internos focado em rastreabilidade e testabilidade.
-
----
+# Especificação de Requisitos: SS Tickets 
 
 ## 1. Requisitos Funcionais (RF)
 
@@ -18,8 +13,6 @@
 * **RF06 - Registro de Notas:** O sistema deve permitir dois tipos de notas: Públicas (visíveis para todos) e Internas (visíveis apenas para Analistas e Admins).
 * **RF07 - Contador de Notas:** Cada nota inserida deve receber um número sequencial automático (Ex: Nota #1, Nota #2) para facilitar menções e rastreabilidade técnica.
 
----
-
 ## 2. Requisitos Não-Funcionais (RNF)
 
 * **RNF01 - Testabilidade (SDET Focus):** Elementos críticos devem possuir o atributo `data-test` para automação com Cypress.
@@ -27,8 +20,6 @@
 * **RNF03 - Arquitetura de API:** Backend RESTful utilizando métodos HTTP (GET, POST, PATCH).
 * **RNF04 - Escalabilidade de Mídia:** Modelagem preparada para futuros anexos e notas ricas.
 * **RNF05 - Segurança:** Senhas criptografadas no banco de dados.
-
----
 
 ## 3. Regras de Negócio (RN)
 
@@ -40,4 +31,4 @@
 * **RN06 - Destaque de Notas:** Notas internas devem ter marcação visual clara para o Analista.
 * **RN07 - Unicidade do Contador:** O contador é absoluto e cronológico; notas internas consomem um número na sequência para auditoria.
 
-[Voltar para README](/docs/README.md)
+Voltar para o [README](/docs/README.md)
