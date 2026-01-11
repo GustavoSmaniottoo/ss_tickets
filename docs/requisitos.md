@@ -23,7 +23,7 @@
 
 ## 3. Regras de Negócio (RN)
 
-* **RN01 - Integridade do Título:** Mínimo de 10 caracteres para abertura do ticket.
+* **RN01 - Integridade do Título:** Mínimo de 10 caracteres para abertura do ticket. ✅
 * **RN02 - Hierarquia de Status:** O Solicitante não pode alterar status para fases técnicas (Ex: Em atendimento/Tratativa Interna).
 * **RN03 - Unificação de Prioridade:** Campo único seguindo a escala: P1 (Crítico), P2 (Médio) e P3 (Baixo).
 * **RN04 - Sequenciamento de Notas:** O contador de notas é individual por ticket e reinicia em cada novo chamado.

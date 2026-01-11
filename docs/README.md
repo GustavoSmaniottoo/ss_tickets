@@ -22,8 +22,6 @@ Aqui você pode dar uma olhada nos [requisitos do Sistema](/docs/requisitos.md),
 
 **Cypress:** Testes E2E em JS pra falar a mesma língua do sistema e deixar tudo bem automatizado.
 
-
-
 ## Como executar o projeto
 
 ### Você vai precisar ter na sua maquina:
@@ -55,3 +53,19 @@ Aqui você pode dar uma olhada nos [requisitos do Sistema](/docs/requisitos.md),
    ```bash
    npm run dev
    ```
+6. **Testes Automatizados:**
+
+   Com a aplicação em execução (`npm run dev`), utilize os comandos abaixo para rodar a suíte de testes do Cypress:
+
+
+   **Modo Interface (Visual):**
+   ```bash
+   npm run cy:open
+   ```
+
+     **Modo Headless (Terminal):**
+   ```bash
+   npm run cy:test
+   ```
+
+
