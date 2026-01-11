@@ -1,0 +1,82 @@
+//primeiro preciso importar a conexão com o banco
+
+const db = require('../config/db'); //connfiguração do banco de dados
+
+///Crio a constante usuarioController que vai agrupar todas as funções relacionadas a usuários
+
+const usuarioController = { //a constante vai ser um objeto que contém várias funções, e vou exportar esse objeto no final do arquivo
+
+    //função para criar um novo usuário 
+    createUsuario: async (req, res) =>{//o req e o res são os objetos de requisição e resposta do Express obrigatórios em qualquer rota ou controller do Express
+
+        try{
+
+        const { nome, email, senha, perfil_id } = req.body;
+        //extraio os dados que o usuário vai enviar no body da requisição com base no que está definido no banco de dados
+
+        //valido se todos os campos obrigatórios foram fornecidos
+        if(!nome || !email || !senha || !perfil_id){//inverto o valor com o ! para verificar se está vazio ou indefinido
+            return res.status(400).json({error: "Todos os campos são obrigatórios."});//se algum campo estiver vazio, retorno um erro 400 (bad request) com uma mensagem de erro
+        }
+
+        //valido se o email é válido (simples validação)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: "Email inválido." });
+        }
+
+        //valido se a senha possui pelo menos 6 caracteres
+        if (senha.length < 6) {
+            return res.status(400).json({ error: "A senha deve ter pelo menos 6 caracteres." });                            
+        }
+
+        //monto a query SQL para inserir o novo usuário no banco de dados
+        //a const query será chamada na função query do db.js como argumento
+        const query = ` 
+                INSERT INTO usuarios (nome, email, senha, perfil_id)
+                VALUES ($1, $2, $3, $4)
+                RETURNING * 
+            `;
+        
+        const values = [nome, email, senha, perfil_id];//array com os valores que vão substituir os placeholders $1, $2, $3 e $4 na query
+
+        const result = await db.query(query, values);//chamo a função query importada do db.js passando a query e os valores
+
+        //resposta de sucesso (201 Created)
+        return res.status(201).json(result.rows[0]);
+        /**o res.status(201) define o código de status HTTP da resposta como 201 (Created)
+         * o .json() envia uma resposta em formato JSON com os dados do usuário criado (result.rows[0])
+         * é seguro utilizar o index 0 porque o RETURNING * sempre retorna um único registro
+         * ou seja vou retornar para o cliente os dados do usuário que acabou de ser criado no banco de dados
+         */
+
+
+
+        } catch (error) {
+
+        console.error("Erro ao criar usuário:", error);//exibo o erro no console do servidor para ajudar na depuração
+
+            //verifico se o erro é de violação de chave única (email duplicado) 
+            if (error.code === '23505') { //o erro 23505 indica violação de chave única no PostgreSQL
+                return res.status(409).json({ 
+                    error: "Conflito de dados",  //esse campo 'error' é o nome da chave no objeto JSON que estou enviando na resposta   
+                    message: "Este e-mail já está cadastrado no sistema." 
+                    });
+                }
+
+            if (error.code === '23503') { //o erro 23503 indica violação de chave estrangeira no PostgreSQL
+                return res.status(400).json({ 
+                    error: "Perfil inválido",  //esse campo 'error' é o nome da chave no objeto JSON que estou enviando na resposta   
+                    message: "O perfil_id fornecido não existe." 
+                    });
+                }
+
+        return res.status(500).json({error: "Erro interno no servidor."});//para outros erros, retorno um erro 500 (internal server error) com uma mensagem de erro genérica
+
+        }
+
+    }
+
+}
+
+module.exports = usuarioController; //exporto o objeto usuarioController para que ele possa ser usado em outros arquivos, como nas rotas de usuário

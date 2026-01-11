@@ -2,6 +2,7 @@ const express = require('express'); //Importo o framework Express da pasta node_
 const db = require('./config/db'); //chamo do diretorio config o arquivo db.js para utilizar a função query
 const app = express();//Inicializo o Express, é como uma instância do Express de onde eu posso chamar várias funcionalidades do framework
 const ticketRoutes = require('./routes/ticketRoutes'); //importo as rotas de tickets
+const usuarioRoutes = require('./routes/usuarioRoutes'); //importo as rotas de usuarios
 
 /** Basicamente criamos um middleware global, onde o express vai automaticamente interpretar qualquer requisição como JSON
   * o app é a instância do Express criada acima
@@ -12,6 +13,10 @@ app.use(express.json());
 app.use('/tickets', ticketRoutes); /**o app.use() pede dois parâmetros: 
 * a rota base e o roteador (router) que vai lidar com as requisições para essa rota
 * no caso o ticketRoutes que foi importado acima*/
+
+app.use('/usuarios', usuarioRoutes); /**o app.use() pede dois parâmetros: 
+* a rota base e o roteador (router) que vai lidar com as requisições para essa rota
+* no caso o usuarioRoutes que foi importado acima*/ 
 
 /**Rota de Teste: é o Health Check para verificar se o backend e o banco de dados estão funcionando
   * aqui basicamente eu crio uma rota GET em /health que tenta fazer uma consulta simples ao banco de dados
