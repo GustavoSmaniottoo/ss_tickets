@@ -1,5 +1,6 @@
 //primeiro preciso importar a conexão com o banco
 
+const e = require('express');
 const db = require('../config/db'); //connfiguração do banco de dados
 
 ///Crio a constante usuarioController que vai agrupar todas as funções relacionadas a usuários
@@ -35,8 +36,8 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
         const query = ` 
                 INSERT INTO usuarios (nome, email, senha, perfil_id)
                 VALUES ($1, $2, $3, $4)
-                RETURNING * 
-            `;
+                RETURNING id, nome, email, perfil_id
+            `; //importante não retornar a senha no RETURNING por questões de segurança
         
         const values = [nome, email, senha, perfil_id];//array com os valores que vão substituir os placeholders $1, $2, $3 e $4 na query
 
@@ -47,11 +48,9 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
         /**o res.status(201) define o código de status HTTP da resposta como 201 (Created)
          * o .json() envia uma resposta em formato JSON com os dados do usuário criado (result.rows[0])
          * é seguro utilizar o index 0 porque o RETURNING * sempre retorna um único registro
-         * ou seja vou retornar para o cliente os dados do usuário que acabou de ser criado no banco de dados
+         * ou seja vou retornar
+         *  para o cliente os dados do usuário que acabou de ser criado no banco de dados
          */
-
-
-
         } catch (error) {
 
         console.error("Erro ao criar usuário:", error);//exibo o erro no console do servidor para ajudar na depuração
@@ -63,7 +62,7 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
                     message: "Este e-mail já está cadastrado no sistema." 
                     });
                 }
-
+            //verifico se o erro é de violação de chave estrangeira (perfil_id inválido)        
             if (error.code === '23503') { //o erro 23503 indica violação de chave estrangeira no PostgreSQL
                 return res.status(400).json({ 
                     error: "Perfil inválido",  //esse campo 'error' é o nome da chave no objeto JSON que estou enviando na resposta   
@@ -72,11 +71,66 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
                 }
 
         return res.status(500).json({error: "Erro interno no servidor."});//para outros erros, retorno um erro 500 (internal server error) com uma mensagem de erro genérica
+        }
+    },
+
+    getUsuarios: async (req, res) => {
+       
+        try {
+            //faço um select no banco, ja com join pra trazer o nome do perfil
+            const result = await db.query(`select u.id,
+                                            u.nome as usuario_nome,
+                                            u.email,
+                                            u.perfil_id,
+                                            p.nome as perfil
+                                        from usuarios u
+                                        join perfis p on p.id = u.perfil_id`)
+            
+            return res.status(200).json(result.rows)//trago todos os usuários com status 200 (OK)
+
+        } catch (error) {
+
+            console.error("Erro ao buscar os usuários:", error)
+            return res.status(500).json({error: "Erro ao buscar a lista de usuários."})
 
         }
 
-    }
+    },
 
+    getUsuarioById: async (req, res) => {
+
+        try{
+
+            const usuarioId = req.params.id //pego o id nos parametros da requisição
+
+            if(isNaN(usuarioId)){
+                return res.status(400).json({error: "ID do usuário inválido, verifique!"})
+            }
+
+            //crio a variavel result, para armazenar a query
+            const result = await db.query(`select u.id,
+                                u.nome as usuario_nome,
+                                u.email,
+                                u.perfil_id,
+                                p.nome as perfil
+                            from usuarios u
+                            join perfis p on p.id = u.perfil_id
+                            where u.id = $1`, [usuarioId])
+
+            if(result.rows.length === 0){
+                return res.status(404).json({error: "Usuário não encontrado."})
+            }               
+            
+            return res.status(200).json(result.rows[0])
+
+        } catch (error) {
+            
+            console.error("Erro ao buscar usuário  por ID: ", error)
+            return res.status(500).json({error: "Erro ao buscar usuário  por ID." })
+        }
+
+    }
+    
 }
 
 module.exports = usuarioController; //exporto o objeto usuarioController para que ele possa ser usado em outros arquivos, como nas rotas de usuário

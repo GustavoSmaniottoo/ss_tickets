@@ -1,18 +1,15 @@
-# Backlog SS Tickets - Módulo Usuários & Testes
+TO DO - SS Tickets
 
-## 1. Concluir o "Enxergável" (Visibilidade)
-- [ ] Implementar `getUsuarios` no `usuarioController.js` (campos: id, nome, email, perfil_id).
-- [ ] Implementar `getUsuarioById` no `usuarioController.js` (validar se o ID é número).
-- [ ] Atualizar `usuarioRoutes.js` com as rotas de GET (Lista e Por ID).
+[x] CRUD Usuários: Listagem e Busca por ID implementados.
 
-## 2. Preparar a "Cama" para os Testes (Infraestrutura)
-- [ ] Configurar Task `resetDb` no `cypress.config.js` (comando TRUNCATE para limpar o lixo de teste).
+[x] Refatoração de Tickets: Nomes de solicitante/analista com JOIN e Aliases.
 
-## 3. Iniciar a Automação (SDET Mode)
-- [ ] Criar teste de Cadastro: Caminho Feliz (Status 201).
-- [ ] Criar teste de Cadastro: E-mail Duplicado (Status 409).
-- [ ] Criar teste de Listagem: Validar se retorna os usuários criados.
+[x] Segurança: Senhas removidas de todos os retornos da API.
 
-## 4. Pontos de Atenção (Melhorias Futuras)
-- [ ] Refatorar `GET /tickets` para incluir nomes de solicitante/analista com JOIN.
-- [ ] Adicionar `perfil_nome` na listagem de usuários usando INNER JOIN.
+[x] Infra de Testes: resetDb configurado e aplicado nos testes de tickets.
+
+[ ] Automação Cypress Usuários: Testar Cadastro (201/409) e Listagem.
+
+[ ] Módulo de Notas: Criar tabela, controller e rotas de notas.
+
+[ ] Integração Final: Validar fluxo completo de abertura e resposta de chamados.

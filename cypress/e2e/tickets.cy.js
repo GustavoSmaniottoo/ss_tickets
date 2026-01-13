@@ -1,17 +1,28 @@
-describe('SS Ticekts - Testes de API', () => {
+describe('Testes E2E- Módulo de Tickets', () => {
 
-  it('Health Check', () =>{
+let idUsuario //variavel para armazenar o id do usuário criado no beforeEach
 
+beforeEach(() => {
+
+    cy.task('resetDb') 
+    //essa task foi definida no cypress.config.js, e serve pra limpar o banco de dados antes de cada teste
+    //antes de criar tickets, preciso ter um usuário solicitante no banco de dados
+    //por isso vou criar um usuário via API aqui no beforeEach do módulo de tickets
     cy.request({
-      method: 'GET',
-      url: '/health'
-    }).then((response) =>{
-
-      expect(response.status).to.equal(200)
-      expect(response.body.message).to.equal('Backend e Banco de Dados conectados!')
-
+        method: 'POST',
+        url: 'usuarios',
+        body:{
+            nome: 'Gustavo Smaniotto',
+            email: 'gustavo@teste6.com.br',
+            senha: '123456',
+            perfil_id: 3
+        }
+    }).then((response) => {
+        expect(response.status).to.equal(201)
+        idUsuario = response.body.id
     })
-  })
+  
+}) 
 
   it('Deve criar um ticket com sucesso com dados são válidos', () => {
     //o cy.request recebe um objeto com as propriedades da requisição
@@ -20,7 +31,7 @@ describe('SS Ticekts - Testes de API', () => {
       method: 'POST',
       url: '/tickets',
       body: {
-        solicitante_id: '3',
+        solicitante_id: idUsuario,
         titulo: 'Cliente sem acesso a aplicação',
         descricao: 'O cliente X não esta conseguindo acessar aplicação, esta sendo exibido mensagem : [erro]',
         prioridade: 'P1'
@@ -70,7 +81,7 @@ describe('SS Ticekts - Testes de API', () => {
       url: '/tickets',
       failOnStatusCode: false, //teste negativo
       body:{
-        solicitante_id: '1',
+        solicitante_id: idUsuario,
         titulo: 'Curto', //titulo curto (< 10)
         descricao: 'Descrição generica',
         prioridade: 'P3'
@@ -87,7 +98,7 @@ describe('SS Ticekts - Testes de API', () => {
       method: 'POST',
       url: '/tickets',
       body: {
-        solicitante_id: '3',
+        solicitante_id: idUsuario,
         titulo: 'Devo conseguir buscar esse ticket pelo ID',
         descricao: 'O cliente precisa buscar o ticket por ID',
         prioridade: 'P2'

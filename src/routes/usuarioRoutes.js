@@ -6,4 +6,11 @@ const usuarioController = require('../controllers/usuarioController');//importo 
 router.post('/', usuarioController.createUsuario);
 //aqui estou dizendo: "quando houver uma requisicao do tipo POST para a rota /usuarios chama o createUsuario do usuarioController"
 
+router.get('/', usuarioController.getUsuarios);
+//aqui estou dizendo: "quando houver uma requisicao do tipo GET para a rota /usuarios chama o getUsuarios do usuarioController"
+
+router.get('/:id', usuarioController.getUsuarioById)
+
+
+
 module.exports = router;  //aqui eu exporto o router para que ele possa ser usado em outros arquivos, como no app.js
