@@ -1,4 +1,4 @@
-describe('Testes E2E- Módulo de Tickets', () => {
+describe('Testes API- Módulo de Tickets', () => {
 
 let idUsuario //variavel para armazenar o id do usuário criado no beforeEach
 
