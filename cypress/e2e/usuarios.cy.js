@@ -110,7 +110,7 @@ describe('Testes API- Módulo Usuários', () => {
         })
     })
 
-    it.only('Deve impedir a criação de usuário com perfil_id inexistente', () => {
+    it('Deve impedir a criação de usuário com perfil_id inexistente', () => {
 
         cy.request({
             method: 'POST',
@@ -128,6 +128,10 @@ describe('Testes API- Módulo Usuários', () => {
             expect(response.body.error).to.equal('Perfil inválido')
         })
     })
+
+    after(() => { //coloquei essa task aqui, pra garantir o id 1 na tabela usuários
+    cy.task('resetDb'); 
+})
 
 })
 

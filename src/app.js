@@ -11,6 +11,20 @@ const notaRoutes = require('./routes/notaRoutes'); //importo as rotas de usuario
   * o express.json() é um middleware que faz magica de pegar o corpo da requisição e transformar em um objeto JavaScript acessível via req.body*/
 app.use(express.json());
 
+/**Middleware para capturar erros de JSON malformado
+* essa sintaxe recebendo quatro parâmetros indica que é um middleware de tratamento de erros no Express
+* estou verificando dentro do err se ele é uma instância de SyntaxError (erro de sintaxe) e se o status é 400 (bad request) e se o corpo do erro contém a propriedade 'body'
+* se todas essas condições forem verdadeiras, significa que houve um erro de sintaxe ao tentar interpretar o JSON enviado na requisição
+* nesse caso, respondo com um status 400 e uma mensagem de erro informando que o JSON está malformado
+* se o erro não for relacionado a JSON malformado, chamo o next() para passar o controle para o próximo middleware de tratamento de erros (se houver)
+*/
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({ error: "JSON malformado. Verifique a sintaxe." });
+    }
+    next();
+});
+
 app.use('/tickets', ticketRoutes); /**o app.use() pede dois parâmetros: 
 * a rota base e o roteador (router) que vai lidar com as requisições para essa rota
 * no caso o ticketRoutes que foi importado acima*/
