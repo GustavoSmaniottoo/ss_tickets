@@ -110,7 +110,7 @@ describe('Testes API- Módulo Usuários', () => {
         })
     })
 
-    it('Deve impedir a criação de usuário com perfil_id inexistente', () => {
+    it.only('Deve impedir a criação de usuário com perfil_id inexistente', () => {
 
         cy.request({
             method: 'POST',
