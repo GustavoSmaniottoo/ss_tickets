@@ -37,7 +37,6 @@ app.use('/notas', notaRoutes); /**o app.use() pede dois parâmetros:
 * a rota base e o roteador (router) que vai lidar com as requisições para essa rota
 * no caso o usuarioRoutes que foi importado acima*/ 
 
-
 /**Rota de Teste: é o Health Check para verificar se o backend e o banco de dados estão funcionando
   * aqui basicamente eu crio uma rota GET em /health que tenta fazer uma consulta simples ao banco de dados
   * decidi manter essa rota no app.js como um ponto central de verificação do sistema, caso surjam novas funcionalidades de sistema eu crio um SystemRoutes.js separado*/

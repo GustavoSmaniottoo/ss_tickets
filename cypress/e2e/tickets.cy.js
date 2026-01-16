@@ -10,7 +10,7 @@ beforeEach(() => {
     //por isso vou criar um usuário via API aqui no beforeEach do módulo de tickets
     cy.request({
         method: 'POST',
-        url: 'usuarios',
+        url: '/usuarios',
         body:{
             nome: 'Gustavo Smaniotto',
             email: 'gustavo@teste6.com.br',
