@@ -7,7 +7,7 @@ const db = require('../config/db')
 
             try{
 
-                const {ticket_id, autor_id, conteudo} = req.body
+                const {ticket_id, autor_id, conteudo} = req.body;
 
                 if(!ticket_id || !autor_id || !conteudo){ //se vem preenchido é true, mas o ! inverte a propriedade, então se não vier prenchido (false) o ! inverte pra true e entre no if
                     return res.status(400).json({error: "Valide os campos obrigatórios."})
@@ -57,16 +57,50 @@ const db = require('../config/db')
 
                 return res.status(201).json(result.rows[0])
 
-            } catch {
+            } catch (error) {
 
                 console.error("Erro detalhado:", error)
                 return res.status(500).json({error: "Erro ao criar a nota."})
             }
 
+        },
+
+        getNotasByTicket: async (req, res) => {
+
+            try{
+
+                const {ticket_id} = req.params;
+
+                if(isNaN(ticket_id) || !ticket_id){
+                    return res.status(400).json({error: "O ID do ticket é obrigatório e deve ser um número válido."})
+                }
+
+                const ticketExist = await db.query('select id, status from tickets where id = $1', [ticket_id]);
+
+                if(ticketExist.rowCount === 0){ //o RowCount informa quantas linhas foram retornadas na consulta
+                    return res.status(400).json({error: "O ticket informado não existe."})
+                }
+
+                const query = `SELECT
+                                    n.num_sequencial,
+                                    n.conteudo,
+                                    n.created_at,
+                                    u.nome AS autor_nome,
+                                    n.autor_id
+                                FROM notas n
+                                JOIN usuarios u ON n.autor_id = u.id
+                                WHERE n.ticket_id = $1
+                                ORDER BY n.num_sequencial ASC`
+                
+                const result = await db.query(query, [ticket_id])
+ 
+                return res.status(200).json(result.rows)
+
+            } catch (error) {
+                console.error("Erro ao buscar notas:", error)
+                return res.status(500).json({error: "Erro interno ao buscar as notas do ticket."})
+            }
         }
-
-    
     }
-
 
 module.exports = notaController;

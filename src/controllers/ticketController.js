@@ -86,7 +86,7 @@ const ticketController = {
     getTicketById: async (req, res) => {
         try{
 
-            const ticketId = req.params.id; //pego o id do ticket dos parametros da requisicao
+            const {ticketId} = req.params; //pego o id do ticket dos parametros da requisicao
 
             if(isNaN(ticketId)){ //verifico se o id nao é um numero
                 return  res.status(400).json({ error: "ID do ticket inválido, tem certeza que isso é um número de ticket?" });//retorno erro 400 (bad request) pro cliente

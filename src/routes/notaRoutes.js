@@ -9,4 +9,5 @@ const notaController = require('../controllers/notaController');//importo o cont
  * a '/' indica que a rota ja esta associada a /tickets no app.js em app.use('/tickets', ticketRoutes);*/
 router.post('/', notaController.createNota);
 
+
 module.exports = router;  //aqui eu exporto o router para que ele possa ser usado em outros arquivos, como no app.js
