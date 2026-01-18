@@ -39,8 +39,8 @@ const db = require('../config/db')
                     return res.status(400).json({error: "O ticket informado não existe."})
                 }
 
-                if(ticketExist.rows[0].status == 'Resolvido'){//estou usando o 403 pq o ticket existe, mas o status não permite a ação
-                    return res.status(403).json({error: "Não é possível adicionar notas a um ticket resolvido."})
+                if(ticketExist.rows[0].status == 'Resolvido'|| ticketExist.rows[0].status === 'Fechado'){//estou usando o 403 pq o ticket existe, mas o status não permite a ação
+                    return res.status(403).json({error: `Não é possível adicionar notas a um ticket com status ${ticketExist.rows[0].status}.`})
                 }
 
                 const query = `insert into notas (ticket_id, autor_id, conteudo, num_sequencial)
@@ -71,7 +71,7 @@ const db = require('../config/db')
 
                 const {ticket_id} = req.params;
 
-                if(isNaN(ticket_id) || !ticket_id){
+                if(isNaN(ticket_id)){
                     return res.status(400).json({error: "O ID do ticket é obrigatório e deve ser um número válido."})
                 }
 

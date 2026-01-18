@@ -22,7 +22,7 @@ CREATE TABLE tickets (
     descricao      TEXT NOT NULL,
     prioridade     VARCHAR(2) NOT NULL CHECK (prioridade IN ('P1', 'P2', 'P3')),
     status         VARCHAR(30) DEFAULT 'Aguardando atendimento' 
-        CHECK (status IN ('Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Respondido', 'Tratativa Interna', 'Resolvido')),
+        CHECK (status IN ('Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Respondido', 'Tratativa Interna', 'Resolvido', 'Fechado')),
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

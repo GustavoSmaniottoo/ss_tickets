@@ -21,5 +21,8 @@ router.get('/:ticketId', ticketController.getTicketById); //rota para buscar tic
 router.get('/:ticket_id/notas', notaController.getNotasByTicket)
 //coloquei essa rota aqui pq faz mais sentido ficar junto com as rotas de tickets
 
+router.patch('/:ticketId', ticketController.updateStatusTicket) //rota para atualizar o status do ticket
+
+
 
 module.exports = router;  //aqui eu exporto o router para que ele possa ser usado em outros arquivos, como no app.js

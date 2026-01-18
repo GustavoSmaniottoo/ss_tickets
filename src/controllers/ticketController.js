@@ -116,7 +116,47 @@ const ticketController = {
             console.error("Erro ao buscar ticket por ID:", error);
             return res.status(500).json({ error: "Erro ao buscar ticket por ID." });
         }
+    },
+
+    updateStatusTicket: async (req, res) =>{
+        try{
+
+            const {ticketId} = req.params; //pego o ID do ticket dos parametros da requisicao
+
+            if(isNaN(ticketId)){
+                return res.status(400).json({error: "ID do ticket inválido, tem certeza que isso é um número de ticket?"})
+            }
+
+             //faço a verificação se o ticket existe
+            const ticketExist = await db.query('select id from tickets where id = $1', [ticketId]);
+
+             if(ticketExist.rowCount === 0){ //o RowCount informa quantas linhas foram retornadas na consulta
+                return res.status(400).json({error: "O ticket informado não existe."})
+            }
+
+            const {status} = req.body; //e o que vai ser alterado (status) eu pego do body da requisicao
+            const statuspermitidos = ['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Respondido', 'Tratativa Interna', 'Resolvido', 'Fechado']
+
+            if(!statuspermitidos.includes(status)){
+                return res.status(400).json({error: "Status inválido. Escolha um dos status permitidos para o ticket. ", statuspermitidos})
+            }
+
+            //faço o update de Status
+            const query = `update tickets set status = $1 where id = $2 returning *`
+
+            const values = [status, ticketId]
+
+            const result = await db.query(query, values)
+
+            return res.status(200).json(result.rows[0])
+
+
+        } catch (error){
+            console.error("Erro ao alterar Status do ticket:", error);
+            return res.status(500).json({ error: "Erro ao alterar status do ticket." });
+        }
     }
+
 };
 
 module.exports = ticketController;

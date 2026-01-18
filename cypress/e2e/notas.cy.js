@@ -216,6 +216,70 @@ describe('Testes API- Módulo de Notas', () =>{
             expect(response.body.error).to.equal("O ticket informado não existe.")
         })
     })
+
+    it('Deve impedir a adição de notas a um ticket resolvido ou fechado.', () =>{
+
+        cy.request({
+            method: 'PATCH',
+            url: `/tickets/${ticketId}`, 
+            body:{
+                status: 'Resolvido'
+            }
+        }).then((response) =>{
+            expect(response.status).to.equal(200)
+            expect(response.body.id).to.equal(ticketId)
+            expect(response.body.status).to.equal('Resolvido')
+
+            cy.request({ //vou fazer a criação da nota dentro desse then, para garantir que o ticket já está resolvido
+            method: 'POST',
+            url: '/notas',
+            failOnStatusCode: false,
+            body:{
+                ticket_id: ticketId,
+                autor_id: usuarioId,
+                conteudo: "Teste de criação de nota em ticket resolvido"
+            }
+            }).then((responseNotas) =>{
+                expect(responseNotas.status).to.equal(403)
+                expect(responseNotas.body.error).to.equal("Não é possível adicionar notas a um ticket com status Resolvido.")
+            })
+        })
+       
+    })
+
+    it('Deve retornar as 2 notas de ticket criadas', () =>{
+        cy.request({
+        method: 'POST',
+        url: '/notas',
+        body: {
+            ticket_id: ticketId,
+            autor_id: usuarioId,
+            conteudo: "Essa é a primeira nota do ticket"
+            }
+        })
+
+        cy.request({
+        method: 'POST',
+        url: '/notas',
+        body: {
+            ticket_id: ticketId,
+            autor_id: usuarioId,
+            conteudo: "Essa é a segunda nota do ticket"
+            }
+        })
+
+       cy.request({
+            method: 'GET',
+            url: `/tickets/${ticketId}/notas`
+       }).then((response) =>{
+            expect(response.status).to.equal(200)
+            expect(response.body[0].num_sequencial).to.equal(1)
+            expect(response.body[0].conteudo).to.equal("Essa é a primeira nota do ticket")
+            expect(response.body[1].num_sequencial).to.equal(2)
+            expect(response.body[1].conteudo).to.equal("Essa é a segunda nota do ticket")
+       })
+    })
+
       
 })
 
