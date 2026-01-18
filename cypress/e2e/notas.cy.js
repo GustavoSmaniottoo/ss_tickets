@@ -28,7 +28,7 @@ describe('Testes API- Módulo de Notas', () =>{
             url: '/tickets',
             body: {
                 solicitante_id: usuarioId,
-	            titulo: "Esse 2 ticket vai receber algumas notas",
+	            titulo: "Ticket A - Feito no BeforeEach",
 	            descricao: "A sequencia estará certa?",
 	            prioridade: "P1"
                 }
@@ -54,6 +54,167 @@ describe('Testes API- Módulo de Notas', () =>{
         expect(resNota.body.conteudo).to.equal("Essa é a primeira nota do ticket")
        })
     
+    })
+
+    it('Valida o sequenciamento de notas do ticket A e B', () =>{
+
+        //ja tenho um ticket criado no beforeEach, então crio o ticket B e 2 notas
+        cy.request({
+            method: 'POST',
+            url: '/tickets',
+            body:{
+                solicitante_id: usuarioId,
+	            titulo: "Ticket B - Feito no It",
+	            descricao: "A sequencia estará certa?",
+	            prioridade: "P2"
+            }
+        }).then((responseTicketB) =>{
+            expect(responseTicketB.status).to.equal(201)
+            const ticketIdB = responseTicketB.body.id
+
+            cy.request({
+                method: 'POST',
+                url: '/notas',
+                body:{
+                    ticket_id: ticketIdB,
+                    autor_id: usuarioId,
+                    conteudo: "Essa é a primeira nota do ticket B"
+            }
+            }).then((responseNotaTicketB) =>{
+                expect(responseNotaTicketB.status).to.equal(201)
+                expect(responseNotaTicketB.body.num_sequencial).to.equal(1)
+            })
+
+            cy.request({
+                method: 'POST',
+                url: '/notas',
+                body:{
+                    ticket_id: ticketIdB,
+                    autor_id: usuarioId,
+                    conteudo: "Essa é a segunda nota do ticket B"
+            }
+            }).then((responseNotaTicketB) =>{
+                expect(responseNotaTicketB.status).to.equal(201)
+                expect(responseNotaTicketB.body.num_sequencial).to.equal(2)
+            })
+        })
+        
+        //agora eu crio uma nota pro ticket A, precisa ter o num_sequencial 1
+        cy.request({
+            method: 'POST',
+            url: '/notas',
+            body:{
+                ticket_id: ticketId,
+                autor_id: usuarioId,
+                conteudo: "Essa é a primeira nota do ticket A"
+            }
+        }).then((responseTicketA) =>{
+            expect(responseTicketA.status).to.equal(201)
+            expect(responseTicketA.body.num_sequencial).to.equal(1)
+        })
+
+    })
+
+    it('Deve impedir a criação de uma nota sem os campos obrigatórios', () =>{
+
+        cy.request({
+            method: 'POST',
+            url: '/notas',
+            failOnStatusCode: false,
+            body:{
+                autor_id: usuarioId,
+                conteudo: "Essa é a primeira nota do ticket A"
+                }
+        }).then((response) =>{
+            expect(response.status).to.equal(400)
+            expect(response.body.error).to.equal("Valide os campos obrigatórios.")
+        })
+
+    })
+
+    it('Deve impedir a criação de uma nota com o conteúdo vazio', () =>{
+        cy.request({
+            method: 'POST',
+            url: '/notas',
+            failOnStatusCode: false,
+            body:{
+                ticket_id: ticketId,
+                autor_id: usuarioId,
+                conteudo: "    "
+                }
+        }).then((response) =>{
+            expect(response.status).to.equal(400)
+            expect(response.body.error).to.equal("O conteúdo da nota não pode estar vazio.")
+        })
+    })
+
+    it('Deve impedir a criação de uma nota se os IDs de ticket e autor não forem numéricos.', () =>{
+        cy.request({
+            method: 'POST',
+            url: '/notas',
+            failOnStatusCode: false,
+            body:{
+                ticket_id: "b",
+                autor_id: "B",
+                conteudo: "Teste de criação"
+            }
+        }).then((response) =>{
+            expect(response.status).to.equal(400)
+            expect(response.body.error).to.equal("Os IDs de ticket e autor devem ser numéricos.")
+        })
+    })
+
+    it('Deve impedir a criaçã de uma nota que excede o limite de 5000 caracteres.', () =>{
+
+    //crio uma variavel com um texto longo
+        const longText = Cypress._.repeat('abcdefghijklmnopqrstuvwxyz', 200)
+        expect(longText.length).to.be.greaterThan(5000) //verifico com o greaterThan se é "maior que" 5000
+
+        cy.request({
+            method: 'POST',
+            url: '/notas',
+            failOnStatusCode: false,
+            body:{
+                ticket_id: ticketId,
+                autor_id: usuarioId,
+                conteudo: longText
+            }
+        }).then((response) =>{
+            expect(response.status).to.equal(400)
+            expect(response.body.error).to.equal("A nota excede o limite de 5000 caracteres.")
+        })
+    })
+
+    it('Deve impedir a criação de uma nota se o autor (usuário) informado não existir.', () =>{
+        cy.request({
+            method: 'POST',
+            url: '/notas',
+            failOnStatusCode: false,
+            body:{
+                ticket_id: ticketId,
+                autor_id: usuarioId + 999999, //não é a melhor forma, mas por enquanto funciona
+                conteudo: "Teste de criação"
+            }
+        }).then((response) =>{
+            expect(response.status).to.equal(400)
+            expect(response.body.error).to.equal("O autor (usuário) informado não existe.")
+        })
+    }) 
+    
+    it('Deve impedir a criação de uma nota se o ticket informado não existir.', () =>{
+        cy.request({
+            method: 'POST',
+            url: '/notas',
+            failOnStatusCode: false,
+            body:{
+                ticket_id: ticketId + 999999, //não é a melhor forma, mas por enquanto funciona
+                autor_id: usuarioId,
+                conteudo: "Teste de criação"
+            }
+        }).then((response) =>{
+            expect(response.status).to.equal(400)
+            expect(response.body.error).to.equal("O ticket informado não existe.")
+        })
     })
       
 })
