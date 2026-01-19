@@ -1,0 +1,20 @@
+/* Estilo "feio" e funcional para depuração */
+body {
+    background-color: #f0f0f0;
+    padding: 20px;
+}
+
+#container-tickets {
+    margin-top: 20px;
+    border: 2px dashed #ccc;
+    padding: 10px;
+}
+
+.ticket-box {
+    background-color: #fff;
+    border: 1px solid #000;
+    margin-bottom: 8px;
+    padding: 10px;
+}
+
+.status-aberto { color: red; font-weight: bold; }

@@ -1,9 +1,13 @@
 const express = require('express'); //Importo o framework Express da pasta node_modules
+const cors = require('cors'); // Importa o middleware para permitir requisições de fora do servidor
 const db = require('./config/db'); //chamo do diretorio config o arquivo db.js para utilizar a função query
 const app = express();//Inicializo o Express, é como uma instância do Express de onde eu posso chamar várias funcionalidades do framework
 const ticketRoutes = require('./routes/ticketRoutes'); //importo as rotas de tickets
 const usuarioRoutes = require('./routes/usuarioRoutes'); //importo as rotas de usuarios
 const notaRoutes = require('./routes/notaRoutes'); //importo as rotas de usuarios
+
+
+app.use(cors()); // Libera o acesso para que o seu HTML consiga consultar a API
 
 /** Basicamente criamos um middleware global, onde o express vai automaticamente interpretar qualquer requisição como JSON
   * o app é a instância do Express criada acima

@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/GustavoSmaniottoo/ss_tickets#readme",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "pg": "^8.16.3"
