@@ -1,10 +1,13 @@
 //primeiro preciso importar a conexão com o banco
-
-const e = require('express');
 const db = require('../config/db'); //connfiguração do banco de dados
+const bcrypt = require('bcryptjs'); //importo o bcryptjs para fazer o hash da senha do usuário
+const jwt = require('jsonwebtoken'); //aqui importo o jsonwebtoken para criar tokens JWT para autenticação
+
+require('dotenv').config();
+
+const SECRET_KEY = process.env.JWT_SECRET;
 
 ///Crio a constante usuarioController que vai agrupar todas as funções relacionadas a usuários
-
 const usuarioController = { //a constante vai ser um objeto que contém várias funções, e vou exportar esse objeto no final do arquivo
 
     //função para criar um novo usuário 
@@ -20,17 +23,21 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
             return res.status(400).json({error: "Todos os campos são obrigatórios."});//se algum campo estiver vazio, retorno um erro 400 (bad request) com uma mensagem de erro
         }
 
+         //valido se a senha possui pelo menos 6 caracteres
+        if (senha.length < 6) {
+            return res.status(400).json({ error: "A senha deve ter pelo menos 6 caracteres." });                            
+        }
+
         //valido se o email é válido (simples validação)
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({ error: "Email inválido." });
         }
+        //faço o hash da senha antes de armazená-la no banco de dados
+        const salt = await bcrypt.genSalt(10); //gero um salt com 10 rounds para aumentar a segurança do hash
+        const senhaHash =  await bcrypt.hash(senha, salt); //faço o hash da senha usando o salt gerado
 
-        //valido se a senha possui pelo menos 6 caracteres
-        if (senha.length < 6) {
-            return res.status(400).json({ error: "A senha deve ter pelo menos 6 caracteres." });                            
-        }
-
+        
         //monto a query SQL para inserir o novo usuário no banco de dados
         //a const query será chamada na função query do db.js como argumento
         const query = ` 
@@ -39,7 +46,7 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
                 RETURNING id, nome, email, perfil_id
             `; //importante não retornar a senha no RETURNING por questões de segurança
         
-        const values = [nome, email, senha, perfil_id];//array com os valores que vão substituir os placeholders $1, $2, $3 e $4 na query
+        const values = [nome, email, senhaHash, perfil_id];//array com os valores que vão substituir os placeholders $1, $2, $3 e $4 na query
 
         const result = await db.query(query, values);//chamo a função query importada do db.js passando a query e os valores
 
@@ -129,8 +136,49 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
             return res.status(500).json({error: "Erro ao buscar usuário  por ID." })
         }
 
+    },
+
+    login: async (req, res) => {
+
+        try{
+
+            const {email, senha} = req.body;
+
+            if(!email || !senha){
+                return res.status(400).json({error: "E-mail e senha são obrigatórios."})
+            }
+
+            const query = `select * from usuarios where email = $1`;
+
+            const result = await db.query(query, [email]);
+
+            if(result.rows.length === 0){
+                return res.status(401).json({error: "E-mail ou senha invalidos."})
+            }
+
+            const usuario = result.rows[0];
+
+            const senhaValida = await bcrypt.compare(senha, usuario.senha);
+
+            if(!senhaValida){
+                return res.status(401).json({error: "E-mail ou senha invalidos."})
+            }
+
+            const token = jwt.sign( //crio uma assinatura JWT usando o método sign do jsonwebtoken
+            { id: usuario.id, perfil: usuario.perfil_id }, //o primeiro argumento é o payload do token, que contém os dados que quero incluir no token (id e perfil do usuário)
+            //obs.: payload é o conteúdo do token, ou seja, as informações que ele carrega
+            SECRET_KEY, //a segunda é a chave secreta usada para assinar o token (deve ser uma string segura e mantida em segredo)
+            { expiresIn: '1h' } // O token expira em 1 hora por segurança
+            );
+
+            return res.status(200).json({message: "Login realizado com sucesso!", token: token});
+
+
+        } catch(error){
+            console.error("Erro no login:", error);
+            return res.status(500).json({ error: "Erro interno no servidor." });
+        }
     }
-    
 }
 
 module.exports = usuarioController; //exporto o objeto usuarioController para que ele possa ser usado em outros arquivos, como nas rotas de usuário
