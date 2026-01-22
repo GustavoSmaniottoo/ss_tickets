@@ -75,9 +75,6 @@ const listaUsers = document.getElementById('container-users')
         } catch (error) {
 
         }
-
-        
-
         
     }
 

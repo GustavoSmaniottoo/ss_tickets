@@ -11,6 +11,6 @@ router.get('/', usuarioController.getUsuarios);
 
 router.get('/:id', usuarioController.getUsuarioById)
 
-
+router.post('/login', usuarioController.login)
 
 module.exports = router;  //aqui eu exporto o router para que ele possa ser usado em outros arquivos, como no app.js

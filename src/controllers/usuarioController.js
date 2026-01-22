@@ -148,6 +148,11 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
                 return res.status(400).json({error: "E-mail e senha são obrigatórios."})
             }
 
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: "Email inválido." });
+            }
+
             const query = `select * from usuarios where email = $1`;
 
             const result = await db.query(query, [email]);
