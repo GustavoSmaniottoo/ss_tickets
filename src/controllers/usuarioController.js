@@ -107,7 +107,6 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
     getUsuarioById: async (req, res) => {
 
         try{
-
             const usuarioId = req.params.id //pego o id nos parametros da requisição
 
             if(isNaN(usuarioId)){

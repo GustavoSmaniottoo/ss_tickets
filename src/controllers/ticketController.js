@@ -28,6 +28,16 @@ const ticketController = {
                  * */
             }
 
+            const prioridadesValidas = ['P1', 'P2', 'P3']
+
+            if (!prioridadesValidas.includes(prioridade)) {
+                return res.status(400).json({ 
+                error: 'Prioridade inválida. Use P1, P2 ou P3.' 
+                })
+            }
+
+
+
             /** 3. Comando SQL para inserir no banco
             * basicamente eu crio uma string com o comando SQL para inserir um novo ticket na tabela tickets
             * essa string vai ser o campo text que vou passar para a função query */
@@ -52,6 +62,14 @@ const ticketController = {
             */
 
         } catch (error) { //caso ocorra algum erro no try, o catch vai capturar esse erro
+
+            if (error.code === '23503') {
+            // Verificamos qual constraint falhou para dar a mensagem exata
+            if (error.constraint === 'tickets_solicitante_id_fkey') {
+                return res.status(400).json({ error: "Usuário solicitante não encontrado." });
+            }
+            }
+
             console.error("Erro ao criar ticket:", error);//vai exibir o erro no console do servidor para ajudar na depuração
             return res.status(500).json({ error: "Erro interno no servidor." });//e pro cliente retorno um erro 500 (internal server error) 
         }
@@ -138,7 +156,7 @@ const ticketController = {
             const statuspermitidos = ['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Respondido', 'Tratativa Interna', 'Resolvido', 'Fechado']
 
             if(!statuspermitidos.includes(status)){
-                return res.status(400).json({error: "Status inválido. Escolha um dos status permitidos para o ticket. ", statuspermitidos})
+                return res.status(400).json({error: 'Status inválido. Escolha um dos status permitidos para o ticket. ' , Status: statuspermitidos})
             }
 
             //faço o update de Status

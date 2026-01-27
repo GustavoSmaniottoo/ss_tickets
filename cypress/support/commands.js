@@ -1,25 +1,38 @@
-// ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-//
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+//comando customizado para realizar login via API
+Cypress.Commands.add('apiLogin', (email, senha) =>{
+    return cy.request({
+        method: 'POST',
+        url: 'usuarios/login',
+        body:{email, senha}
+    }).then((response) =>{
+        return response.body.token
+    })
+})
+
+//comando customizado para criar usuário via API
+Cypress.Commands.add('createUsuario', (payload) =>{
+    return cy.request({
+        method: 'POST',
+        url: '/usuarios',
+        failOnStatusCode: false,
+        body: payload
+    })
+})
+
+//comando pra criar ticket via API
+Cypress.Commands.add('createTicket', (payload, token = null) =>{
+    const headers ={}; //crio um objeto vazio para os headers
+
+    if (token) { //se o token for fornecido, incluo no cabeçalho
+        headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return  cy.request({
+		method: 'POST',
+		url: '/tickets',
+        failOnStatusCode: false,   
+		body: payload,
+        headers: headers //trago o Authorization que prenchi na condicional acima
+	  })
+})
+

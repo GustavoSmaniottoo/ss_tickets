@@ -1,49 +1,51 @@
 describe('Testes API- Módulo de Notas', () =>{
 
-    //vou deixar um usuario criado, o ticket e a nota eu vou criar dentro do it
-    let usuarioId;
+   	let token; //variável para armazenar o token de autenticação
+	let usuarioId; //variável para armazenar o ID do usuário criado
+	let payloadTicket;
     let ticketId;
 
-    beforeEach(() =>{
+	beforeEach(() => { //primeiro reseto o banco de dados   
+		cy.task('resetDb')
 
-        cy.task('resetDb')//limpo o banco
+		//crio um usuário admin para autenticar e obter o token
+		const payload = {
+			nome: 'Gustavo Admin A',
+			email: 'gustavo.admin@teste.com.br',
+			senha: 'Gso@123456',
+			perfil_id: 3
+		}
 
-        cy.request({
-            method: 'POST',
-            url: '/usuarios',
-            body: {
-                nome: "Maiza Cliente",
-                email: "maiza1@test2e.com.br",
-                senha: "123456",
-                perfil_id: 1
-            }
+		cy.createUsuario(payload).then((response) => {
+			expect(response.status).to.equal(201)
+		}).then((response) => {
+			usuarioId = response.body.id //salvo o ID do usuário criado para usar posteriormente
+			payloadTicket = {
+				solicitante_id: usuarioId,
+				titulo: "Ticket padrão para os testes.",
+				descricao: "Essa é uma descrição de um ticket padrão.",
+				prioridade: "P3"
+			}
+			//faço o login via API para obter o token
+			cy.apiLogin(payload.email, payload.senha).then((tokenRetornado) => {
+				expect(tokenRetornado).to.be.a('string')
+				token = tokenRetornado
 
-        }).then((resUser) =>{
-            expect(resUser.status).to.equal(201)
-            usuarioId = resUser.body.id;
-
-        //vou criar um ticket aqui tambem, por que fora desse bloco o id do ticket nao vai estar definido
-            cy.request({
-            method: 'POST',
-            url: '/tickets',
-            body: {
-                solicitante_id: usuarioId,
-	            titulo: "Ticket A - Feito no BeforeEach",
-	            descricao: "A sequencia estará certa?",
-	            prioridade: "P1"
-                }
-            }).then((resTicket) =>{
-                expect (resTicket.status).to.equal(201)
-                ticketId = resTicket.body.id;
-            })
-        })
-    })
+            cy.createTicket(payloadTicket, token).then((response) => {
+			expect(response.status).to.equal(201)
+			expect(response.body.titulo).to.equal('Ticket padrão para os testes.')
+            ticketId = response.body.id //salvo o ID do ticket criado para usar posteriormente
+		    })
+			})
+		})
+	})
 
     it('Deve adicionar uma nota a um ticket com sucesso', () => {
         
        cy.request({
         method: 'POST',
         url: '/notas',
+        headers: {Authorization: `Bearer ${token}`},
         body: {
             ticket_id: ticketId,
             autor_id: usuarioId,
