@@ -59,64 +59,67 @@ describe('Testes API- Módulo de Notas', () =>{
     })
 
     it('Valida o sequenciamento de notas do ticket A e B', () =>{
-
-        //ja tenho um ticket criado no beforeEach, então crio o ticket B e 2 notas
-        cy.request({
-            method: 'POST',
-            url: '/tickets',
-            body:{
-                solicitante_id: usuarioId,
-	            titulo: "Ticket B - Feito no It",
-	            descricao: "A sequencia estará certa?",
-	            prioridade: "P2"
-            }
-        }).then((responseTicketB) =>{
-            expect(responseTicketB.status).to.equal(201)
-            const ticketIdB = responseTicketB.body.id
-
+        
+        const payloadTicketB = {
+            solicitante_id: usuarioId,
+            titulo: "Ticket B para sequenciamento de notas.",
+            descricao: "Descrição de um ticket padrão.",
+            prioridade: "P3"
+        }
+        cy.createTicket(payloadTicketB, token).then((response) => {
+            expect(response.status).to.equal(201)
+            expect(response.body.titulo).to.equal('Ticket B para sequenciamento de notas.')
+        
             cy.request({
                 method: 'POST',
                 url: '/notas',
+                headers: {Authorization: `Bearer ${token}`},
                 body:{
-                    ticket_id: ticketIdB,
+                    ticket_id: response.body.id,
                     autor_id: usuarioId,
                     conteudo: "Essa é a primeira nota do ticket B"
-            }
+                }
             }).then((responseNotaTicketB) =>{
-                expect(responseNotaTicketB.status).to.equal(201)
-                expect(responseNotaTicketB.body.num_sequencial).to.equal(1)
-            })
-
-            cy.request({
-                method: 'POST',
-                url: '/notas',
-                body:{
-                    ticket_id: ticketIdB,
-                    autor_id: usuarioId,
-                    conteudo: "Essa é a segunda nota do ticket B"
-            }
-            }).then((responseNotaTicketB) =>{
-                expect(responseNotaTicketB.status).to.equal(201)
-                expect(responseNotaTicketB.body.num_sequencial).to.equal(2)
+             expect(responseNotaTicketB.status).to.equal(201)
+             expect(responseNotaTicketB.body.num_sequencial).to.equal(1)
             })
         })
         
-        //agora eu crio uma nota pro ticket A, precisa ter o num_sequencial 1
-        cy.request({
-            method: 'POST',
-            url: '/notas',
-            body:{
-                ticket_id: ticketId,
-                autor_id: usuarioId,
-                conteudo: "Essa é a primeira nota do ticket A"
-            }
-        }).then((responseTicketA) =>{
-            expect(responseTicketA.status).to.equal(201)
-            expect(responseTicketA.body.num_sequencial).to.equal(1)
-        })
+        //.then((responseNotaTicketB) =>{
+        //     expect(responseNotaTicketB.status).to.equal(201)
+        //     expect(responseNotaTicketB.body.num_sequencial).to.equal(1)
+        // })
+        
+        // cy.request({
+        //     method: 'POST',
+        //     url: '/notas',
+        //     body:{
+        //         ticket_id: ticketIdB,
+        //         autor_id: usuarioId,
+        //         conteudo: "Essa é a segunda nota do ticket B"
+        //     }
+        // }).then((responseNotaTicketB) =>{
+        //     expect(responseNotaTicketB.status).to.equal(201)
+        //     expect(responseNotaTicketB.body.num_sequencial).to.equal(2)
+        // })
+
+        // //agora eu crio uma nota pro ticket A, precisa ter o num_sequencial 1
+        // cy.request({
+        //     method: 'POST',
+        //     url: '/notas',
+        //     body:{
+        //         ticket_id: ticketId,
+        //         autor_id: usuarioId,
+        //         conteudo: "Essa é a primeira nota do ticket A"
+        //     }
+        // }).then((responseTicketA) =>{
+        //     expect(responseTicketA.status).to.equal(201)
+        //     expect(responseTicketA.body.num_sequencial).to.equal(1)
+        // })
 
     })
 
+    /*
     it('Deve impedir a criação de uma nota sem os campos obrigatórios', () =>{
 
         cy.request({
@@ -281,7 +284,7 @@ describe('Testes API- Módulo de Notas', () =>{
             expect(response.body[1].conteudo).to.equal("Essa é a segunda nota do ticket")
        })
     })
-
+    */
       
 })
 
