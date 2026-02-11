@@ -36,3 +36,14 @@ Cypress.Commands.add('createTicket', (payload, token = null) =>{
 	  })
 })
 
+//comando para criar nota via API
+Cypress.Commands.add('createNota', (payload, token) => {
+    return cy.request({
+        method: 'POST',
+        url: '/notas',
+        headers: { Authorization: `Bearer ${token}` },
+        failOnStatusCode: false, 
+        body: payload
+    })
+})
+

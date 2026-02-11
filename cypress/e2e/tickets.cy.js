@@ -80,21 +80,9 @@ describe('Testes API- Módulo de Tickets', () => {
 	it('Deve validar cenários de dados inválidos para tickets', () => {
 
 		const cenarios = [
-			{
-				label: 'Título curto (RN01)',
-				extra: { titulo: 'Curto' }, // Menos de 10 caracteres 
-				msg: 'O título deve ter pelo menos 10 caracteres.'
-			},
-			{
-				label: 'Prioridade inválida',
-				extra: { prioridade: 'P4' }, // Apenas P1, P2 ou P3 são aceitos 
-				msg: 'Prioridade inválida. Use P1, P2 ou P3.'
-			},
-			{
-				label: 'Solicitante inexistente',
-				extra: { solicitante_id: 9999999 },
-				msg: 'Usuário solicitante não encontrado.'
-			}
+			{label: 'Título curto (RN01)', extra: { titulo: 'Curto' }, msg: 'O título deve ter pelo menos 10 caracteres.'},
+			{label: 'Prioridade inválida', extra: { prioridade: 'P4' }, msg: 'Prioridade inválida. Use P1, P2 ou P3.'},
+			{label: 'Solicitante inexistente', extra: { solicitante_id: 9999999 }, msg: 'Usuário solicitante não encontrado.'}
 		]
 
 		cenarios.forEach((cenario) => {

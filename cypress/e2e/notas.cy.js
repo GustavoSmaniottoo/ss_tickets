@@ -1,290 +1,158 @@
 describe('Testes API- Módulo de Notas', () =>{
 
-   	let token; //variável para armazenar o token de autenticação
-	let usuarioId; //variável para armazenar o ID do usuário criado
-	let payloadTicket;
-    let ticketId;
+    let token; 
 
-	beforeEach(() => { //primeiro reseto o banco de dados   
-		cy.task('resetDb')
+	beforeEach(() => { 
 
-		//crio um usuário admin para autenticar e obter o token
-		const payload = {
+        cy.task('resetDb');
+
+		//crio um usuário
+		const payloadUser = {
 			nome: 'Gustavo Admin A',
 			email: 'gustavo.admin@teste.com.br',
 			senha: 'Gso@123456',
 			perfil_id: 3
-		}
+		};
 
-		cy.createUsuario(payload).then((response) => {
+		cy.createUsuario(payloadUser).then((response) => {
 			expect(response.status).to.equal(201)
-		}).then((response) => {
-			usuarioId = response.body.id //salvo o ID do usuário criado para usar posteriormente
-			payloadTicket = {
-				solicitante_id: usuarioId,
-				titulo: "Ticket padrão para os testes.",
-				descricao: "Essa é uma descrição de um ticket padrão.",
-				prioridade: "P3"
-			}
-			//faço o login via API para obter o token
-			cy.apiLogin(payload.email, payload.senha).then((tokenRetornado) => {
-				expect(tokenRetornado).to.be.a('string')
-				token = tokenRetornado
+            return response.body.id;
+		}).as('usuarioId'); //armazeno como alias o id do usuario
+
+        //faço o login
+        cy.apiLogin(payloadUser.email, payloadUser.senha).then((tokenRetornado) => {
+			expect(tokenRetornado).to.be.a('string')
+			token = tokenRetornado
+        });
+
+
+        //pra acessar a informação da promise, dou um get no alias
+        cy.get('@usuarioId').then((usuarioId) => {
+            const payloadTicket = {
+                solicitante_id: usuarioId,
+                titulo: "Ticket padrão para os testes.",
+                descricao: "Descrição padrão.",
+                prioridade: "P3"
+            };
 
             cy.createTicket(payloadTicket, token).then((response) => {
 			expect(response.status).to.equal(201)
 			expect(response.body.titulo).to.equal('Ticket padrão para os testes.')
-            ticketId = response.body.id //salvo o ID do ticket criado para usar posteriormente
-		    })
-			})
-		})
-	})
+            return response.body.id;
+		    }).as('ticketId');
+        });	
+		
+	});
 
-    it('Deve adicionar uma nota a um ticket com sucesso', () => {
+    //nessa spec vou usar o function() para ter acesso ao this
+    //do contrario (usando o arrow function) não teria acesso, e teria que dar um get nos alias
+
+    it('Deve adicionar uma nota a um ticket com sucesso', function() {
         
-       cy.request({
-        method: 'POST',
-        url: '/notas',
-        headers: {Authorization: `Bearer ${token}`},
-        body: {
-            ticket_id: ticketId,
-            autor_id: usuarioId,
+        //crio o payload da nota
+        const payloadNota = {
+            ticket_id: this.ticketId, //o this tem acesso ao alias do ticket criado no beforeEach, que fica no objeto de contexto da spec
+            autor_id: this.usuarioId, //mesma coisa aqui, o usuarioId foi salvo como alias no beforeEach, mas não preciso usar o get, visto que o mesmo agora é uma propriedade do objeto de contexto da spec, acessivel via this
             conteudo: "Essa é a primeira nota do ticket"
         }
-       }).then((resNota) =>{
+        cy.createNota(payloadNota, token).then((resNota) =>{
         expect(resNota.status).to.equal(201)
-        expect(resNota.body.conteudo).to.equal("Essa é a primeira nota do ticket")
+        expect(resNota.body.conteudo).to.equal(payloadNota.conteudo)
        })
     
     })
 
-    it('Valida o sequenciamento de notas do ticket A e B', () =>{
-        
+    it('Valida o sequenciamento de notas do ticket A e B', function() {
+
+        /* Pra validar o sequenciamente independente, vou criar um ticketB e adicionar 2 notas ao mesmo, e validar o num_sequencial
+        * Depois vou adicionar uma nota ao ticket A, e preciso validar que o num_sequencial da nota do ticket A é 1, e o num_sequencial da primeira nota do ticket B também é 1, ou seja, o sequenciamento é independente entre os tickets
+        */
         const payloadTicketB = {
-            solicitante_id: usuarioId,
+            solicitante_id: this.usuarioId,
             titulo: "Ticket B para sequenciamento de notas.",
             descricao: "Descrição de um ticket padrão.",
             prioridade: "P3"
-        }
+        };
+
         cy.createTicket(payloadTicketB, token).then((response) => {
-            expect(response.status).to.equal(201)
-            expect(response.body.titulo).to.equal('Ticket B para sequenciamento de notas.')
+            expect(response.status).to.equal(201);
+            expect(response.body.titulo).to.equal(payloadTicketB.titulo);
+            const ticketIdB = response.body.id;
+
+            //crio a 1º nota pro ticket B, e valido que o num_sequencial é 1
+            cy.createNota({ticket_id: ticketIdB, autor_id: this.usuarioId, conteudo: "Nota 1 - Ticket B"}, token)
+                .its('body.num_sequencial').should('eq', 1);
+            //crio a 2º nota pro ticket B, e valido que o num_sequencial é 2
+            cy.createNota({ticket_id: ticketIdB, autor_id: this.usuarioId, conteudo: "Nota 2 - Ticket B"}, token)
+                .its('body.num_sequencial').should('eq', 2);
+            //crio a 1º nota pro ticket A, e valido que o num_sequencial é 1
+            cy.createNota({ticket_id: this.ticketId, autor_id: this.usuarioId, conteudo: "Nota 1 - Ticket A"}, token)
+                .its('body.num_sequencial').should('eq', 1);
+        })
+    })
+
+     it('Deve impedir a criação de uma nota com conteúdo vazio ou inválido', function() {
         
-            cy.request({
-                method: 'POST',
-                url: '/notas',
-                headers: {Authorization: `Bearer ${token}`},
-                body:{
-                    ticket_id: response.body.id,
-                    autor_id: usuarioId,
-                    conteudo: "Essa é a primeira nota do ticket B"
-                }
-            }).then((responseNotaTicketB) =>{
-             expect(responseNotaTicketB.status).to.equal(201)
-             expect(responseNotaTicketB.body.num_sequencial).to.equal(1)
-            })
-        })
-        
-        //.then((responseNotaTicketB) =>{
-        //     expect(responseNotaTicketB.status).to.equal(201)
-        //     expect(responseNotaTicketB.body.num_sequencial).to.equal(1)
-        // })
-        
-        // cy.request({
-        //     method: 'POST',
-        //     url: '/notas',
-        //     body:{
-        //         ticket_id: ticketIdB,
-        //         autor_id: usuarioId,
-        //         conteudo: "Essa é a segunda nota do ticket B"
-        //     }
-        // }).then((responseNotaTicketB) =>{
-        //     expect(responseNotaTicketB.status).to.equal(201)
-        //     expect(responseNotaTicketB.body.num_sequencial).to.equal(2)
-        // })
+        const cenarios = [
+            { extra: { conteudo: "   " }, erro: "O conteúdo da nota não pode estar vazio." },
+            { extra: { ticket_id: "abc" }, erro: "Os IDs de ticket e autor devem ser numéricos." }
+        ];
 
-        // //agora eu crio uma nota pro ticket A, precisa ter o num_sequencial 1
-        // cy.request({
-        //     method: 'POST',
-        //     url: '/notas',
-        //     body:{
-        //         ticket_id: ticketId,
-        //         autor_id: usuarioId,
-        //         conteudo: "Essa é a primeira nota do ticket A"
-        //     }
-        // }).then((responseTicketA) =>{
-        //     expect(responseTicketA.status).to.equal(201)
-        //     expect(responseTicketA.body.num_sequencial).to.equal(1)
-        // })
+        cenarios.forEach(cenario => {
+            const payloadInvalido = {
+                ticket_id: this.ticketId,
+                autor_id: this.usuarioId,
+                conteudo: "Nota Válida",
+                ...cenario.extra
+            };
 
-    })
+            cy.createNota(payloadInvalido, token).then(res => {
+                expect(res.status).to.equal(400);
+                expect(res.body.error).to.equal(cenario.erro);
+            });
+        });
+    });
 
-    /*
-    it('Deve impedir a criação de uma nota sem os campos obrigatórios', () =>{
+    it('Deve retornar todas as notas de um ticket específico', function() {
+        // Criamos duas notas em sequência
+        cy.createNota({ ticket_id: this.ticketId, autor_id: this.usuarioId, conteudo: "Nota 1" }, token);
+        cy.createNota({ ticket_id: this.ticketId, autor_id: this.usuarioId, conteudo: "Nota 2" }, token);
 
         cy.request({
-            method: 'POST',
-            url: '/notas',
-            failOnStatusCode: false,
-            body:{
-                autor_id: usuarioId,
-                conteudo: "Essa é a primeira nota do ticket A"
-                }
-        }).then((response) =>{
-            expect(response.status).to.equal(400)
-            expect(response.body.error).to.equal("Valide os campos obrigatórios.")
-        })
+            method: 'GET',
+            url: `/tickets/${this.ticketId}/notas`,
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(res => {
+            expect(res.status).to.equal(200);
+            expect(res.body).to.have.lengthOf(2);
+            expect(res.body[0].num_sequencial).to.equal(1);
+            expect(res.body[1].num_sequencial).to.equal(2);
+        });
+    });
 
-    })
-
-    it('Deve impedir a criação de uma nota com o conteúdo vazio', () =>{
-        cy.request({
-            method: 'POST',
-            url: '/notas',
-            failOnStatusCode: false,
-            body:{
-                ticket_id: ticketId,
-                autor_id: usuarioId,
-                conteudo: "    "
-                }
-        }).then((response) =>{
-            expect(response.status).to.equal(400)
-            expect(response.body.error).to.equal("O conteúdo da nota não pode estar vazio.")
-        })
-    })
-
-    it('Deve impedir a criação de uma nota se os IDs de ticket e autor não forem numéricos.', () =>{
-        cy.request({
-            method: 'POST',
-            url: '/notas',
-            failOnStatusCode: false,
-            body:{
-                ticket_id: "b",
-                autor_id: "B",
-                conteudo: "Teste de criação"
-            }
-        }).then((response) =>{
-            expect(response.status).to.equal(400)
-            expect(response.body.error).to.equal("Os IDs de ticket e autor devem ser numéricos.")
-        })
-    })
-
-    it('Deve impedir a criaçã de uma nota que excede o limite de 5000 caracteres.', () =>{
-
-    //crio uma variavel com um texto longo
-        const longText = Cypress._.repeat('abcdefghijklmnopqrstuvwxyz', 200)
-        expect(longText.length).to.be.greaterThan(5000) //verifico com o greaterThan se é "maior que" 5000
-
-        cy.request({
-            method: 'POST',
-            url: '/notas',
-            failOnStatusCode: false,
-            body:{
-                ticket_id: ticketId,
-                autor_id: usuarioId,
-                conteudo: longText
-            }
-        }).then((response) =>{
-            expect(response.status).to.equal(400)
-            expect(response.body.error).to.equal("A nota excede o limite de 5000 caracteres.")
-        })
-    })
-
-    it('Deve impedir a criação de uma nota se o autor (usuário) informado não existir.', () =>{
-        cy.request({
-            method: 'POST',
-            url: '/notas',
-            failOnStatusCode: false,
-            body:{
-                ticket_id: ticketId,
-                autor_id: usuarioId + 999999, //não é a melhor forma, mas por enquanto funciona
-                conteudo: "Teste de criação"
-            }
-        }).then((response) =>{
-            expect(response.status).to.equal(400)
-            expect(response.body.error).to.equal("O autor (usuário) informado não existe.")
-        })
-    }) 
-    
-    it('Deve impedir a criação de uma nota se o ticket informado não existir.', () =>{
-        cy.request({
-            method: 'POST',
-            url: '/notas',
-            failOnStatusCode: false,
-            body:{
-                ticket_id: ticketId + 999999, //não é a melhor forma, mas por enquanto funciona
-                autor_id: usuarioId,
-                conteudo: "Teste de criação"
-            }
-        }).then((response) =>{
-            expect(response.status).to.equal(400)
-            expect(response.body.error).to.equal("O ticket informado não existe.")
-        })
-    })
-
-    it('Deve impedir a adição de notas a um ticket resolvido ou fechado.', () =>{
+    it('Deve impedir adição de notas a um ticket com status Resolvido (RN06)', function() {
 
         cy.request({
             method: 'PATCH',
-            url: `/tickets/${ticketId}`, 
-            body:{
-                status: 'Resolvido'
-            }
-        }).then((response) =>{
-            expect(response.status).to.equal(200)
-            expect(response.body.id).to.equal(ticketId)
-            expect(response.body.status).to.equal('Resolvido')
+            url: `/tickets/${this.ticketId}`,
+            headers: { Authorization: `Bearer ${token}` },
+            body: { status: 'Resolvido' }
+        }).then((resPatch) => {
+            expect(resPatch.status).to.equal(200); 
 
-            cy.request({ //vou fazer a criação da nota dentro desse then, para garantir que o ticket já está resolvido
-            method: 'POST',
-            url: '/notas',
-            failOnStatusCode: false,
-            body:{
-                ticket_id: ticketId,
-                autor_id: usuarioId,
-                conteudo: "Teste de criação de nota em ticket resolvido"
-            }
-            }).then((responseNotas) =>{
-                expect(responseNotas.status).to.equal(403)
-                expect(responseNotas.body.error).to.equal("Não é possível adicionar notas a um ticket com status Resolvido.")
-            })
-        })
-       
-    })
+            const payloadNota = {
+                ticket_id: this.ticketId,
+                autor_id: this.usuarioId,
+                conteudo: "Tentativa de nota em ticket finalizado"
+            };
 
-    it('Deve retornar as 2 notas de ticket criadas', () =>{
-        cy.request({
-        method: 'POST',
-        url: '/notas',
-        body: {
-            ticket_id: ticketId,
-            autor_id: usuarioId,
-            conteudo: "Essa é a primeira nota do ticket"
-            }
-        })
-
-        cy.request({
-        method: 'POST',
-        url: '/notas',
-        body: {
-            ticket_id: ticketId,
-            autor_id: usuarioId,
-            conteudo: "Essa é a segunda nota do ticket"
-            }
-        })
-
-       cy.request({
-            method: 'GET',
-            url: `/tickets/${ticketId}/notas`
-       }).then((response) =>{
-            expect(response.status).to.equal(200)
-            expect(response.body[0].num_sequencial).to.equal(1)
-            expect(response.body[0].conteudo).to.equal("Essa é a primeira nota do ticket")
-            expect(response.body[1].num_sequencial).to.equal(2)
-            expect(response.body[1].conteudo).to.equal("Essa é a segunda nota do ticket")
-       })
-    })
-    */
+            cy.createNota(payloadNota, token).then(res => {
+                expect(res.status).to.equal(403); 
+                expect(res.body.error).to.equal(`Não é possível adicionar notas a um ticket com status Resolvido.`)
+            });
+        });
+    });
+   
       
 })
 
