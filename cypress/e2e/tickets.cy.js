@@ -20,7 +20,6 @@ describe('Testes API- Módulo de Tickets', () => {
 		}).then((response) => {
 			usuarioId = response.body.id //salvo o ID do usuário criado para usar posteriormente
 			payloadTicket = {
-				solicitante_id: usuarioId,
 				titulo: "Ticket padrão para os testes.",
 				descricao: "Essa é uma descrição de um ticket padrão.",
 				prioridade: "P3"
@@ -61,7 +60,7 @@ describe('Testes API- Módulo de Tickets', () => {
 
 	it('Deve validar a ausência de cada campo obrigatório', () => {
 
-		const campos = ['solicitante_id', 'titulo', 'descricao', 'prioridade']
+		const campos = ['titulo', 'descricao', 'prioridade']
 
 		campos.forEach(campo => {
 
@@ -81,8 +80,7 @@ describe('Testes API- Módulo de Tickets', () => {
 
 		const cenarios = [
 			{label: 'Título curto (RN01)', extra: { titulo: 'Curto' }, msg: 'O título deve ter pelo menos 10 caracteres.'},
-			{label: 'Prioridade inválida', extra: { prioridade: 'P4' }, msg: 'Prioridade inválida. Use P1, P2 ou P3.'},
-			{label: 'Solicitante inexistente', extra: { solicitante_id: 9999999 }, msg: 'Usuário solicitante não encontrado.'}
+			{label: 'Prioridade inválida', extra: { prioridade: 'P4' }, msg: 'Prioridade inválida. Use P1, P2 ou P3.'}
 		]
 
 		cenarios.forEach((cenario) => {

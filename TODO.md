@@ -1,61 +1,33 @@
-# TO DO - SS Tickets
+# SS Tickets - Planeamento e Progresso
 
-## [CONCLUÍDO]
-- [x] CRUD Tickets: Criação, Listagem e Busca por ID.
-- [x] CRUD Usuários: Listagem e Busca por ID implementados.
-- [x] Refatoração de Tickets: Nomes de solicitante/analista com JOIN e Aliases.
-- [x] Segurança: Senhas removidas de todos os retornos da API.
-- [x] Infra de Testes: resetDb configurado e aplicado nos testes de tickets.
-- [x] Módulo de Notas: Controller e rotas de notas finalizados.
-- [x] Automação Usuários: 6 cenários validados (Cadastro, Conflito e Integridade).
+## 1. Arquitetura e Infraestrutura
+- [x] **Estrutura Monorepo:** Organização do projeto dividida em `packages/backend` e `packages/frontend` utilizando NPM Workspaces.
+- [x] **Base de Dados Dockerizada:** PostgreSQL configurado via Docker Compose com persistência de dados.
+- [x] **Automação de Schema:** Implementação do ficheiro `init.sql` com a criação de tabelas e sementes (seeds) iniciais.
+- [x] **Ambiente de Testes:** Integração do Cypress com a base de dados para limpeza automática via `task resetDb`.
 
-## [EM ANDAMENTO: Segurança & Auth (Backend)]
-- [x] Instalação: Instalar `jsonwebtoken` e `bcryptjs`.
-- [x] Refatoração Cadastro: Atualizar `createUsuarios` para criptografar senha com `bcrypt.hash`.
-- [x] Rota de Login: Implementar `POST /login` (Verificar user -> Comparar senha -> Gerar JWT).
-- [x] Middleware de Proteção: Criar função para exigir Token nas rotas de Tickets e Usuários.
-- [X] Proteger as Rotas: Aplicar o middleware auth nos arquivos de rotas de Usuários, Tickets e Notas.
-- [ ] Refatorar Controllers: Alterar os métodos de criação/edição nos controllers para usarem o req.usuarioId do Token.
+## 2. Backend e Segurança
+- [x] **Servidor Express:** Configuração de middlewares para CORS, JSON e tratamento de erros de sintaxe.
+- [x] **Autenticação JWT:** Implementação do fluxo de login, geração de tokens e middleware para proteção de rotas privadas.
+- [x] **Criptografia:** Proteção de passwords utilizando a biblioteca `bcryptjs`.
+- [x] **Refatoração de Identidade (Segurança):**
+    - [x] **Tickets:** Identificação automática do solicitante através do Token JWT.
+    - [x] **Notas:** Identificação automática do autor através do Token JWT.
+    - [x] **Payloads Limpos:** Remoção de IDs manuais no corpo das requisições para garantir a integridade da identidade.
 
-## [EM ANDAMENTO: Testes Automatizados (Backend)]
-- [x] Ajustar cypress/support/commands.js: Garantir que cy.createUser e cy.apiLogin usem a sintaxe de return correta e o C maiúsculo.
-- [x] Criar Custom Command cy.createTicket: Abstrair a criação de tickets para limpar as specs de Notas e de Tickets.
+## 3. Testes e Qualidade
+- [x] **Módulo de Utilizadores:** Testes de criação, login e restrição de acesso.
+- [x] **Módulo de Tickets:** Cobertura de criação, listagem, procura por ID e atualização de estado.
+- [x] **Módulo de Notas:** Validação de sequenciamento independente por ticket e bloqueio de interações em tickets resolvidos.
+- [x] **Sincronização de Erros:** Ajuste das mensagens de validação entre os Controllers e as Specs do Cypress.
 
-2. Spec de Usuários (Finalização)
-- [x] Aplicar o Loop forEach para validar campos obrigatórios (Nome, Email, Senha, Perfil).
-- [x] Aplicar o Loop de Cenários (label, extra, msg) para dados inválidos (Email sem @, Senha curta, Perfil inexistente).
-- [x] Criar os 5 testes de GET:
-- [x] Listagem Geral (validar se é array).
-- [x] Busca por ID (validar integridade).
-- [x] Erro 404 para ID inexistente.
-- [x] Validação de privacidade (garantir que não retorna senha).
-- [x] Teste de Busca com ID inválido (string).
+## 4. Frontend - React (Próximo Passo)
+- [ ] **Setup do Projeto:** Inicializar React + Vite na pasta `packages/frontend`.
+- [ ] **Ligação com a API:** Configurar a comunicação entre o Frontend e o Backend (Porta 3000).
+- [ ] **Sistema de Autenticação:** Criação de ecrãs de Login e armazenamento seguro do Token.
+- [ ] **Interface de Tickets:** Desenvolvimento do Dashboard e visualização detalhada com histórico de notas.
 
-3. Spec de Tickets (Refatoração)
-- [x] Limpar o beforeEach: Substituir o cy.request manual pelo seu comando cy.createUser.
-- [x] Implementar o Loop de Cenários no POST de tickets (Campos obrigatórios e Título < 10 caracteres).
-- [x] Refatorar os testes de PATCH (Status) para usar o novo comando de criação de tickets.
+---
 
-4. Spec de Notas (Refatoração)
-- [x] Refatorar o beforeEach em cascata: Usar os Custom Commands para criar o Usuário e o Ticket necessário para a nota.
-- [x] Aplicar Loop de Cenários para erros de criação de notas:
-- [x] Conteúdo vazio ou apenas espaços.
-- [x] IDs de ticket/autor não numéricos.
-- [x] Limite de 5000 caracteres.
-- [x] Ticket ou Autor inexistente.
-- [x] Refatorar teste de Sequenciamento: Garantir que a lógica de num_sequencial 1, 2, 3... está sólida.
-
-## [PRÓXIMOS PASSOS:]
-- [ ] Testes de API: Validar cenários de login (Sucesso, 401 Unauthorized).
-- [ ] Automação Notas: Implementar os 15 cenários (Sucesso, Erros 400/403 e Integridade).
-- [ ] Refatoração de Testes: Padronizar suítes usando `describe`/`context`.
-- [ ] Custom Commands: Isolar lógica de criação de registros no Cypress.
-- [ ] Normalização DB: Migrar status de Tickets para tabela `status_types`.
-
-## [FRONT-END: Interface & Integração]
-- [ ] Tela de Login: Criar HTML/CSS (Inputs estáticos).
-- [ ] Persistência de Auth: Lógica para salvar Token no `localStorage`.
-- [ ] Interface Base: Layout de listagem e visualização de ticket único.
-- [ ] Timeline de Notas: Estrutura de "chat" para interações.
-- [ ] Integração Fetch: Implementar Headers com `Authorization: Bearer <token>`.
-- [ ] Validação Visual: Refletir travas do backend na UI (ex: mensagens de erro).
+### Notas de Versão
+> O projeto utiliza uma arquitetura de Monorepo, garantindo que o Backend e o Frontend partilhem o mesmo ecossistema de desenvolvimento. O Backend está testado e pronto para consumo.

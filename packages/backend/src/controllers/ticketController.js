@@ -10,12 +10,16 @@ const ticketController = {
     //o req e res são os objetos de requisição e resposta do Express obrigatórios em qualquer rota ou controller do Express
         try { //uso o try pra fazer o caminho feliz, ou seja, o código que eu espero que funcione sem erros
 
-            // 1. Extraímos os dados que o usuário enviou no body da requisição
-            const { solicitante_id, titulo, descricao, prioridade } = req.body;
+            //Extraímos os dados que o usuário enviou no body da requisição
+            const { titulo, descricao, prioridade } = req.body;
+
+            //pego o ID do solicitante das credenciais do usuário, que foram adicionadas ao req pelo middleware de autenticação (authMiddleware.js)
+            const solicitante_id = req.usuarioId;
+
             //é "criado" uma constante para cada campo esperado no body da requisição
            
             // 2. valido se os dados obrigatórios estão presentes e válidos, se não estiverem retorno erro 400 (bad request)
-            if (!solicitante_id || !titulo || !descricao || !prioridade) { //o ! inverte o valor, ou seja, verifica se está vazio ou indefinido
+            if (!titulo || !descricao || !prioridade) { //o ! inverte o valor, ou seja, verifica se está vazio ou indefinido
                 return res.status(400).json({ error: "Todos os campos são obrigatórios." });
                 //exemplo: se o titulo estiver vazio o js entenderia como false com o ! ele inverte para true e entra no if
             }

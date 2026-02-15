@@ -1,6 +1,8 @@
+require('dotenv').config({ path: './packages/backend/.env' }); // Carrega as variáveis de ambiente do arquivo .env localizado na pasta backend
+
 const { defineConfig } = require("cypress");
 
-const db = require("./src/config/db");
+const db = require("./packages/backend/src/config/db");
 
 module.exports = defineConfig({
   e2e: {

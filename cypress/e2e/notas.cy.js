@@ -23,25 +23,20 @@ describe('Testes API- Módulo de Notas', () =>{
         cy.apiLogin(payloadUser.email, payloadUser.senha).then((tokenRetornado) => {
 			expect(tokenRetornado).to.be.a('string')
 			token = tokenRetornado
-        });
-
-
-        //pra acessar a informação da promise, dou um get no alias
-        cy.get('@usuarioId').then((usuarioId) => {
+       
             const payloadTicket = {
-                solicitante_id: usuarioId,
                 titulo: "Ticket padrão para os testes.",
                 descricao: "Descrição padrão.",
                 prioridade: "P3"
             };
 
             cy.createTicket(payloadTicket, token).then((response) => {
-			expect(response.status).to.equal(201)
-			expect(response.body.titulo).to.equal('Ticket padrão para os testes.')
-            return response.body.id;
-		    }).as('ticketId');
-        });	
-		
+                expect(response.status).to.equal(201)
+                expect(response.body.titulo).to.equal('Ticket padrão para os testes.')
+                return response.body.id;
+            }).as('ticketId');
+        
+		 });
 	});
 
     //nessa spec vou usar o function() para ter acesso ao this
@@ -52,7 +47,6 @@ describe('Testes API- Módulo de Notas', () =>{
         //crio o payload da nota
         const payloadNota = {
             ticket_id: this.ticketId, //o this tem acesso ao alias do ticket criado no beforeEach, que fica no objeto de contexto da spec
-            autor_id: this.usuarioId, //mesma coisa aqui, o usuarioId foi salvo como alias no beforeEach, mas não preciso usar o get, visto que o mesmo agora é uma propriedade do objeto de contexto da spec, acessivel via this
             conteudo: "Essa é a primeira nota do ticket"
         }
         cy.createNota(payloadNota, token).then((resNota) =>{
@@ -68,7 +62,6 @@ describe('Testes API- Módulo de Notas', () =>{
         * Depois vou adicionar uma nota ao ticket A, e preciso validar que o num_sequencial da nota do ticket A é 1, e o num_sequencial da primeira nota do ticket B também é 1, ou seja, o sequenciamento é independente entre os tickets
         */
         const payloadTicketB = {
-            solicitante_id: this.usuarioId,
             titulo: "Ticket B para sequenciamento de notas.",
             descricao: "Descrição de um ticket padrão.",
             prioridade: "P3"
@@ -80,13 +73,13 @@ describe('Testes API- Módulo de Notas', () =>{
             const ticketIdB = response.body.id;
 
             //crio a 1º nota pro ticket B, e valido que o num_sequencial é 1
-            cy.createNota({ticket_id: ticketIdB, autor_id: this.usuarioId, conteudo: "Nota 1 - Ticket B"}, token)
+            cy.createNota({ticket_id: ticketIdB, conteudo: "Nota 1 - Ticket B"}, token)
                 .its('body.num_sequencial').should('eq', 1);
             //crio a 2º nota pro ticket B, e valido que o num_sequencial é 2
-            cy.createNota({ticket_id: ticketIdB, autor_id: this.usuarioId, conteudo: "Nota 2 - Ticket B"}, token)
+            cy.createNota({ticket_id: ticketIdB, conteudo: "Nota 2 - Ticket B"}, token)
                 .its('body.num_sequencial').should('eq', 2);
             //crio a 1º nota pro ticket A, e valido que o num_sequencial é 1
-            cy.createNota({ticket_id: this.ticketId, autor_id: this.usuarioId, conteudo: "Nota 1 - Ticket A"}, token)
+            cy.createNota({ticket_id: this.ticketId, conteudo: "Nota 1 - Ticket A"}, token)
                 .its('body.num_sequencial').should('eq', 1);
         })
     })
@@ -95,13 +88,12 @@ describe('Testes API- Módulo de Notas', () =>{
         
         const cenarios = [
             { extra: { conteudo: "   " }, erro: "O conteúdo da nota não pode estar vazio." },
-            { extra: { ticket_id: "abc" }, erro: "Os IDs de ticket e autor devem ser numéricos." }
+            { extra: { ticket_id: "abc" }, erro: "O ID do ticket deve ser numérico." }
         ];
 
         cenarios.forEach(cenario => {
             const payloadInvalido = {
                 ticket_id: this.ticketId,
-                autor_id: this.usuarioId,
                 conteudo: "Nota Válida",
                 ...cenario.extra
             };
@@ -115,8 +107,8 @@ describe('Testes API- Módulo de Notas', () =>{
 
     it('Deve retornar todas as notas de um ticket específico', function() {
         // Criamos duas notas em sequência
-        cy.createNota({ ticket_id: this.ticketId, autor_id: this.usuarioId, conteudo: "Nota 1" }, token);
-        cy.createNota({ ticket_id: this.ticketId, autor_id: this.usuarioId, conteudo: "Nota 2" }, token);
+        cy.createNota({ ticket_id: this.ticketId, conteudo: "Nota 1" }, token);
+        cy.createNota({ ticket_id: this.ticketId, conteudo: "Nota 2" }, token);
 
         cy.request({
             method: 'GET',
@@ -142,7 +134,6 @@ describe('Testes API- Módulo de Notas', () =>{
 
             const payloadNota = {
                 ticket_id: this.ticketId,
-                autor_id: this.usuarioId,
                 conteudo: "Tentativa de nota em ticket finalizado"
             };
 

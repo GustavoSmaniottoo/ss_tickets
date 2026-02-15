@@ -7,9 +7,11 @@ const db = require('../config/db')
 
             try{
 
-                const {ticket_id, autor_id, conteudo} = req.body;
+                const autor_id = req.usuarioId; // Identidade confirmada pelo Token
 
-                if(!ticket_id || !autor_id || !conteudo){ //se vem preenchido é true, mas o ! inverte a propriedade, então se não vier prenchido (false) o ! inverte pra true e entre no if
+                const {ticket_id, conteudo} = req.body;
+
+                if(!ticket_id || !conteudo){ //se vem preenchido é true, mas o ! inverte a propriedade, então se não vier prenchido (false) o ! inverte pra true e entre no if
                     return res.status(400).json({error: "Valide os campos obrigatórios."})
                 }
 
@@ -17,8 +19,8 @@ const db = require('../config/db')
                     return res.status(400).json({error: "O conteúdo da nota não pode estar vazio."})
                 }
 
-                if(isNaN(ticket_id) || isNaN(autor_id)){
-                    return res.status(400).json({error: "Os IDs de ticket e autor devem ser numéricos."})
+                if(isNaN(ticket_id)){
+                    return res.status(400).json({error: "O ID do ticket deve ser numérico."})
                 }
 
                 if(conteudo.length > 5000){
