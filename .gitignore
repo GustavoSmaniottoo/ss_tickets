@@ -1,5 +1,28 @@
+# Dependências
 node_modules/
+dist/
+build/
+.Vite/
+
+# Variáveis de Ambiente (Segurança)
 .env
-npm-debug.log
-cypress/screenshots
-cypress/videos
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Testes (Cypress)
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+
+# Sistema e IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,71 +1,68 @@
-# SS Tickets - Sistema de gestão de chamados
+# SS Tickets - Gestão de Chamados
 
-O SS tickets é um projeto pessoal focado nos fundamentos do desenvolvimento e qualidade de software.
+O SS Tickets é um projeto fullstack focado nos fundamentos do desenvolvimento e qualidade de software (SDET focus). A proposta é uma implementação enxuta e totalmente documentada, priorizando o "básico bem feito" para garantir um sistema simples, estável e escalável.
 
-A proposta é uma implementação enxuta e totalmente documentada, priorizando o "básico bem feito" para garantir um sistema simples, estável e escalável.
+## 📂 Documentação de Apoio
 
-## Documentação de apoio:
+Acesse a documentação detalhada na pasta `/docs`:
 
-Aqui você pode dar uma olhada nos [requisitos do Sistema](/docs/requisitos.md), organizados em:
+* **[Especificação de Requisitos](/docs/requirements.md)**: Organização de Requisitos Funcionais (RF), Não-Funcionais (RNF) e Regras de Negócio (RN).
+* **[Especificação de Comportamento (BDD)](/docs/specs.md)**: Cenários de teste em formato Gherkin que servem como guia para o desenvolvimento e para a automação no Cypress.
 
-* Requisitos funcionais
-* Não funcionais 
-* Regras de negócio
+## 🏗️ Estrutura do Projeto (Monorepo)
 
-## Tecnologias
+O projeto utiliza **npm workspaces** para gerenciar as camadas da aplicação em um único repositório:
 
-**Node.js & Express:** Backend em JavaScript com Express para facilitar a organização das rotas da API.
+* **`packages/backend`**: API RESTful desenvolvida com Node.js e Express.
+* **`packages/frontend`**: Interface SPA moderna utilizando React e Vite.
+* **`cypress/`**: Suíte de testes automatizados integrada.
 
-**PostgreSQL:** Banco de dados relacional rubusto .
+## 🛠️ Tecnologias
 
-**Docker:** Utilizado por enquanto para gerenciar o container do PostgreSQL.
+* **Runtime**: Node.js (v18 ou superior).
+* **Banco de Dados**: PostgreSQL rodando via Docker.
+* **Segurança**: Autenticação via JWT (JSON Web Token).
+* **Testes**: Cypress para automação E2E (End-to-End).
 
-**Cypress:** Testes E2E em JS pra falar a mesma língua do sistema e deixar tudo bem automatizado.
-
-## Como executar o projeto
-
-### Você vai precisar ter na sua maquina:
-* [ ] **Node.js** (v18 ou superior)
-* [ ] **Docker & Docker Compose**
-* [ ] **Git**
+## 🚀 Como Executar
 
 ### Passo a Passo
 
-1. **Clone o repositório:**
-   ```bash
-   git clone https://github.com/GustavoSmaniottoo/ss_tickets.git && cd ss_tickets
-   ```
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/GustavoSmaniottoo/ss_tickets.git && cd ss_tickets
+    ```
 
-2. **Suba o banco de dados (Docker):**
-   ```bash
-   docker-compose up -d
-   ```
+2.  **Instale as dependências (na raiz do projeto):**
+    ```bash
+    npm install
+    ```
+    *Este comando instala as dependências de todos os pacotes do workspace simultaneamente.*
 
-3. **Instale as dependências:**
-   ```bash
-   npm install
-   ```
+3.  **Suba o banco de dados via Docker:**
+    ```bash
+    docker-compose up -d
+    ```
 
-4. **Configure o ambiente:**
-   Crie um arquivo `.env` na raiz do projeto e configure as credenciais do banco.
+4.  **Configure o ambiente:**
+    Crie um arquivo `.env` na raiz do projeto (conforme o modelo de exemplo) para configurar as credenciais do banco e a chave secreta do JWT.
 
-5. **Inicie a aplicação:**
-   ```bash
-   npm run dev
-   ```
-6. **Testes Automatizados:**
+5.  **Inicie a aplicação (Backend + Frontend):**
+    ```bash
+    npm run dev
+    ```
+    *Utiliza o `concurrently` para subir os dois serviços em um único terminal.*
 
-   Com a aplicação em execução (`npm run dev`), utilize os comandos abaixo para rodar a suíte de testes do Cypress:
+## 🧪 Testes Automatizados
 
+Com a aplicação em execução, utilize os comandos abaixo na raiz para rodar os testes:
 
-   **Modo Interface (Visual):**
-   ```bash
-   npm run cy:open
-   ```
+* **Modo Interface (Visual):**
+    ```bash
+    npm run cy:open
+    ```
 
-     **Modo Headless (Terminal):**
-   ```bash
-   npm run cy:test
-   ```
-
-
+* **Modo Headless (Terminal):**
+    ```bash
+    npm run cy:test
+    ```

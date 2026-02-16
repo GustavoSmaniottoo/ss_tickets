@@ -7,10 +7,12 @@
   "scripts": {
     "backend:dev": "npm run dev -w packages/backend",
     "frontend:dev": "npm run dev -w packages/frontend",
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
     "cy:open": "cypress open",
     "cy:test": "cypress run"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "cypress": "15.8.1"
   }
 }
