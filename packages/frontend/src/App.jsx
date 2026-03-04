@@ -1,19 +1,55 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
+// Importação das páginas
+import Login from './pages/Login';
+import Cadastro from './pages/Cadastro.jsx';
+import Home from './pages/Home';
+
+// Esta função Protege as rotas.
+// Ela verifica se existe um token no navegador antes de deixar o usuário entrar.
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    // Se não houver token, redireciona para o login
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <h1 datacy = 'teste'>Hello Word - SS Tickets</h1>
-      </div>
-     
-    </>
-  )
+    <Router>
+      <Routes>
+        {/* Rotas Públicas: Acessíveis sem login */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Cadastro />} />
+
+        {/* Rotas Privadas: Exigem o token JWT via ProtectedRoute */}
+        <Route 
+          path="/meus-chamados" 
+          element={
+            <ProtectedRoute>
+              <div>Tela de Chamados (Solicitante)</div>
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/fila-global" 
+          element={
+            <ProtectedRoute>
+              <div>Tela de Fila (Analista)</div>
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Redirecionamento padrão: Qualquer rota desconhecida vai para o Login */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

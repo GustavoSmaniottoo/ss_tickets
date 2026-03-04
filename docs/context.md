@@ -1,7 +1,7 @@
 # SS Tickets - Contexto do Projeto (Atualizado)
 
 ## Visao geral
-- Monorepo Node.js com backend em Express e testes E2E com Cypress.
+- Monorepo Node.js com backend em Express, frontend React/Vite e testes E2E com Cypress.
 - Banco PostgreSQL via Docker Compose, com schema e seed inicial em init.sql.
 - Autenticacao com JWT e senha criptografada com bcrypt.
 
@@ -30,8 +30,10 @@
 - Scripts:
   - backend:dev -> npm run dev -w packages/backend
   - frontend:dev -> npm run dev -w packages/frontend
+  - dev -> concurrently "npm run backend:dev" "npm run frontend:dev"
   - cy:open -> cypress open
   - cy:test -> cypress run
+- Dependencias relevantes: concurrently, cypress, axios, react-router-dom.
 
 ### Backend (packages/backend)
 - Scripts:
@@ -121,12 +123,12 @@
   - Criacao, sequenciamento e regras de validacao.
 
 ## Documentacao
-- docs/README.md: visao geral, tecnologias e como rodar.
-- docs/requisitos.md: requisitos e regras de negocio.
-- docs/cenarios_de_teste.md: casos de teste do MVP.
+- docs/README.md: visao geral e como rodar.
+- docs/requirements.md: requisitos e regras de negocio.
+- docs/specs.md: cenarios BDD.
 
 ## TODO / Roadmap
-- Ver TODO.md para progresso de auth, testes e front-end.
+- Ver TODO.md para progresso de infra, backend e front-end.
 
 ## Copia completa - app e controllers
 
@@ -417,7 +419,7 @@ const ticketController = {
             //é "criado" uma constante para cada campo esperado no body da requisição
            
             // 2. valido se os dados obrigatórios estão presentes e válidos, se não estiverem retorno erro 400 (bad request)
-            if (!solicitante_id || !titulo || !descricao || !prioridade) { //o ! inverte o valor, ou seja, verifica se está vazio ou indefinido
+            if (!titulo || !descricao || !prioridade) { //o ! inverte o valor, ou seja, verifica se está vazio ou indefinido
                 return res.status(400).json({ error: "Todos os campos são obrigatórios." });
                 //exemplo: se o titulo estiver vazio o js entenderia como false com o ! ele inverte para true e entra no if
             }
@@ -1590,6 +1592,477 @@ Cypress.Commands.add('createNota', (payload, token) => {
 
 // Import commands.js using ES2015 syntax:
 import './commands'
+```
+
+## Copia completa - frontend (React/Vite)
+
+### packages/frontend/package.json
+```json
+{
+    "name": "frontend",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "lint": "eslint .",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.39.1",
+        "@types/react": "^19.2.7",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.1",
+        "eslint": "^9.39.1",
+        "eslint-plugin-react-hooks": "^7.0.1",
+        "eslint-plugin-react-refresh": "^0.4.24",
+        "globals": "^16.5.0",
+        "vite": "^7.3.1"
+    }
+}
+```
+
+### packages/frontend/index.html
+```html
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>frontend</title>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="/src/main.jsx"></script>
+    </body>
+</html>
+
+```
+
+### packages/frontend/vite.config.js
+```javascript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+    plugins: [react()],
+})
+
+```
+
+### packages/frontend/eslint.config.js
+```javascript
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+    globalIgnores(['dist']),
+    {
+        files: ['**/*.{js,jsx}'],
+        extends: [
+            js.configs.recommended,
+            reactHooks.configs.flat.recommended,
+            reactRefresh.configs.vite,
+        ],
+        languageOptions: {
+            ecmaVersion: 2020,
+            globals: globals.browser,
+            parserOptions: {
+                ecmaVersion: 'latest',
+                ecmaFeatures: { jsx: true },
+                sourceType: 'module',
+            },
+        },
+        rules: {
+            'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+        },
+    },
+])
+
+```
+
+### packages/frontend/src/main.jsx
+```jsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+    <StrictMode>
+        <App />
+    </StrictMode>,
+)
+
+```
+
+### packages/frontend/src/App.jsx
+```jsx
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
+// Importação das páginas
+import Login from './pages/Login';
+import Cadastro from './pages/Cadastro.jsx'
+
+// BALDE DE CONTEXTO: Esta função Protege as rotas.
+// Ela verifica se existe um token no navegador antes de deixar o usuário entrar.
+const ProtectedRoute = ({ children }) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        // Se não houver token, redireciona para o login
+        return <Navigate to="/login" replace />;
+    }
+    return children;
+};
+
+function App() {
+    return (
+        <Router>
+            <Routes>
+                {/* Rotas Públicas: Acessíveis sem login */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/cadastro" element={<Cadastro />} />
+
+                {/* Rotas Privadas: Exigem o token JWT via ProtectedRoute */}
+                <Route 
+                    path="/meus-chamados" 
+                    element={
+                        <ProtectedRoute>
+                            <div>Tela de Chamados (Solicitante)</div>
+                        </ProtectedRoute>
+                    } 
+                />
+        
+                <Route 
+                    path="/fila-global" 
+                    element={
+                        <ProtectedRoute>
+                            <div>Tela de Fila (Analista)</div>
+                        </ProtectedRoute>
+                    } 
+                />
+
+                {/* Redirecionamento padrão: Qualquer rota desconhecida vai para o Login */}
+                <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+        </Router>
+    );
+}
+
+export default App;
+```
+
+### packages/frontend/src/pages/Login.jsx
+```jsx
+import React, { useState } from 'react';
+
+const Login = () => {
+    // CONTEXTO: 'useState' é como o frontend cria "caixas de memória" temporárias.
+    // Quando o usuário digita, guardamos o valor nessas variáveis.
+    const [email, setEmail] = useState('');
+    const [senha, setSenha] = useState('');
+    const [mensagem, setMensagem] = useState('');
+
+    const handleSubmit = async (event) => {
+        event.preventDefault(); // Impede que a página recarregue ao clicar no botão
+
+        try {
+            // CONTEXTO: 'fetch' é a função nativa para fazer chamadas HTTP.
+            // Estamos batendo na rota definida no seu 'usuarioRoutes.js'.
+            const response = await fetch('http://localhost:3000/usuarios/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, senha }) // Transforma os dados em JSON para o backend
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // CONTEXTO: Se o login for 200 (OK), guardamos o Token no navegador.
+                localStorage.setItem('token', data.token);
+                setMensagem("Login realizado com sucesso!");
+                // Próximo passo: Redirecionar para o Dashboard
+            } else {
+                // CONTEXTO: Trata erros como o 401 definido no seu 'usuarioController.js'.
+                setMensagem(data.error || "Erro ao realizar login");
+            }
+        } catch (error) {
+            setMensagem("Erro de conexão com o servidor.");
+        }
+    };
+
+    return (
+        <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
+            <h2>SS Tickets - Login</h2>
+      
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label>E-mail:</label>
+                    <input 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        data-cy="login-email" // Atributo para seus testes Cypress
+                        required 
+                    />
+                </div>
+
+                <div style={{ marginTop: '10px' }}>
+                    <label>Senha:</label>
+                    <input 
+                        type="password" 
+                        value={senha} 
+                        onChange={(e) => setSenha(e.target.value)} 
+                        data-cy="login-password"
+                        required 
+                    />
+                </div>
+
+                <button type="submit" style={{ marginTop: '20px' }} data-cy="login-button">
+                    Entrar
+                </button>
+            </form>
+
+            {mensagem && <p data-cy="login-message">{mensagem}</p>}
+        </div>
+    );
+};
+
+export default Login;
+```
+
+### packages/frontend/src/pages/Cadastro.jsx
+```jsx
+import React, { useState } from 'react';
+import api from '../api/api'; // Sua instância do Axios
+
+const Cadastro = () => {
+    const [formData, setFormData] = useState({
+        nome: '',
+        email: '',
+        senha: '',
+        perfil_id: 1 // Começa como Solicitante por padrão
+    });
+    const [mensagem, setMensagem] = useState('');
+
+    // Função única para atualizar qualquer campo do formulário
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+
+    const handleCadastro = async (e) => {
+        e.preventDefault();
+        try {
+            // Chamada para o backend via Axios
+            const response = await api.post('/usuarios', formData);
+      
+            if (response.status === 201) {
+                setMensagem("Usuário criado com sucesso! Prossiga para o Login.");
+            }
+        } catch (error) {
+            // Captura o erro 409 (E-mail duplicado) ou 400 (Dados inválidos)
+            const msgErro = error.response?.data?.message || error.response?.data?.error;
+            setMensagem(msgErro || "Erro ao realizar cadastro.");
+        }
+    };
+
+    return (
+        <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
+            <h2>SS Tickets - Novo Usuário</h2>
+            <form onSubmit={handleCadastro}>
+                <input 
+                    name="nome" 
+                    placeholder="Nome Completo" 
+                    onChange={handleChange} 
+                    required 
+                    data-cy="cad-nome"
+                />
+                <input 
+                    name="email" 
+                    type="email" 
+                    placeholder="E-mail" 
+                    onChange={handleChange} 
+                    required 
+                    data-cy="cad-email"
+                />
+                <input 
+                    name="senha" 
+                    type="password" 
+                    placeholder="Senha (mín. 6 caracteres)" 
+                    onChange={handleChange} 
+                    required 
+                    data-cy="cad-senha"
+                />
+        
+                <select name="perfil_id" onChange={handleChange} data-cy="cad-perfil">
+                    <option value="1">Solicitante</option>
+                    <option value="2">Analista</option>
+                </select>
+
+                <button type="submit" style={{ marginTop: '20px' }}>Criar Conta</button>
+            </form>
+            {mensagem && <p>{mensagem}</p>}
+        </div>
+    );
+};
+
+export default Cadastro;
+```
+
+### packages/frontend/src/api/api.js
+```javascript
+import axios from 'axios';
+
+// Criamos uma "instância" personalizada do Axios
+const api = axios.create({
+    baseURL: 'http://localhost:3000', // Endereço do seu backend
+});
+
+// INTERCEPTOR: Antes de qualquer requisição sair, esta função é executada
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token'); // Pega a "chave" guardada no login
+  
+    if (token) {
+        // Se existir um token, ele anexa no formato Bearer exigido pelo seu authMiddleware.js
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+  
+    return config;
+});
+
+export default api;
+```
+
+### packages/frontend/src/App.css
+```css
+#root {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.logo {
+    height: 6em;
+    padding: 1.5em;
+    will-change: filter;
+    transition: filter 300ms;
+}
+.logo:hover {
+    filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+    filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    a:nth-of-type(2) .logo {
+        animation: logo-spin infinite 20s linear;
+    }
+}
+
+.card {
+    padding: 2em;
+}
+
+.read-the-docs {
+    color: #888;
+}
+
+```
+
+### packages/frontend/src/index.css
+```css
+:root {
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+
+    color-scheme: light dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    font-weight: 500;
+    color: #646cff;
+    text-decoration: inherit;
+}
+a:hover {
+    color: #535bf2;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    place-items: center;
+    min-width: 320px;
+    min-height: 100vh;
+}
+
+h1 {
+    font-size: 3.2em;
+    line-height: 1.1;
+}
+
+button {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: pointer;
+    transition: border-color 0.25s;
+}
+button:hover {
+    border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        color: #213547;
+        background-color: #ffffff;
+    }
+    a:hover {
+        color: #747bff;
+    }
+    button {
+        background-color: #f9f9f9;
+    }
+}
+
 ```
 
 ## Copia completa - env e configs basicas
