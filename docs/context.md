@@ -1,9 +1,11 @@
 # SS Tickets - Contexto do Projeto (Atualizado)
+Atualizado em 2026-03-04.
 
 ## Visao geral
 - Monorepo Node.js com backend em Express, frontend React/Vite e testes E2E com Cypress.
 - Banco PostgreSQL via Docker Compose, com schema e seed inicial em init.sql.
 - Autenticacao com JWT e senha criptografada com bcrypt.
+- Frontend SPA com rotas protegidas e integracao via Axios (token Bearer).
 
 ## Estrutura (resumo)
 ```
@@ -40,6 +42,14 @@
   - start -> node src/app.js
   - dev -> nodemon src/app.js
 - Dependencias principais: express, pg, dotenv, cors, bcryptjs, jsonwebtoken.
+
+### Frontend (packages/frontend)
+- Scripts:
+    - dev -> vite
+    - build -> vite build
+    - preview -> vite preview
+- Dependencias principais: react, react-dom.
+- Dev dependencies principais: vite, eslint, @vitejs/plugin-react.
 
 ## Backend - principais modulos
 ### App e middlewares
@@ -85,6 +95,30 @@
 - routes/notaRoutes.js
   - POST /notas (auth)
 
+## Frontend - principais modulos
+### App e rotas
+- App.jsx
+    - React Router com rotas publicas: /, /login, /cadastro.
+    - Rotas privadas: /meus-chamados e /fila-global via ProtectedRoute.
+    - ProtectedRoute verifica token no localStorage.
+
+### Paginas
+- pages/Home.jsx
+    - Landing simples com links para login e cadastro.
+- pages/Login.jsx
+    - Login via Axios em /usuarios/login e armazenamento de token.
+    - Redireciona para /meus-chamados apos sucesso.
+- pages/Cadastro.jsx
+    - Cadastro via Axios em /usuarios com perfil_id padrao 1.
+    - Redireciona para /login apos sucesso.
+
+### API e bootstrap
+- api/api.js
+    - Axios com baseURL http://localhost:3000.
+    - Interceptor injeta Authorization Bearer com token do localStorage.
+- main.jsx
+    - Renderiza App em StrictMode.
+
 ### Health check
 - GET /health
   - Consulta simples ao banco e retorna status.
@@ -92,7 +126,7 @@
 ## Banco de dados
 - docker-compose.yml levanta Postgres 15 e carrega init.sql.
 - init.sql cria tabelas:
-  - perfis, usuarios, tickets, notas.
+    - perfis, usuarios, tickets, notas (com is_internal e num_sequencial).
 - Seeds iniciais:
   - perfis: Solicitante, Analista, Admin.
   - usuarios e tickets de exemplo.
@@ -129,6 +163,7 @@
 
 ## TODO / Roadmap
 - Ver TODO.md para progresso de infra, backend e front-end.
+- Nota: o frontend ja possui setup Vite + telas basicas (home/login/cadastro) e integracao com a API.
 
 ## Copia completa - app e controllers
 

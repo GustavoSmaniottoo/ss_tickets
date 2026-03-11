@@ -2,14 +2,14 @@
 
 O SS Tickets é um projeto fullstack focado nos fundamentos do desenvolvimento e qualidade de software (SDET focus). A proposta é uma implementação enxuta e totalmente documentada, priorizando o "básico bem feito" para garantir um sistema simples, estável e escalável.
 
-## 📂 Documentação de Apoio
+## Documentação de Apoio
 
 Acesse a documentação detalhada na pasta `/docs`:
 
 * **[Especificação de Requisitos](/docs/requirements.md)**: Organização de Requisitos Funcionais (RF), Não-Funcionais (RNF) e Regras de Negócio (RN).
 * **[Especificação de Comportamento (BDD)](/docs/specs.md)**: Cenários de teste em formato Gherkin que servem como guia para o desenvolvimento e para a automação no Cypress.
 
-## 🏗️ Estrutura do Projeto (Monorepo)
+## Estrutura do Projeto (Monorepo)
 
 O projeto utiliza **npm workspaces** para gerenciar as camadas da aplicação em um único repositório:
 
@@ -17,14 +17,14 @@ O projeto utiliza **npm workspaces** para gerenciar as camadas da aplicação em
 * **`packages/frontend`**: Interface SPA moderna utilizando React e Vite.
 * **`cypress/`**: Suíte de testes automatizados integrada.
 
-## 🛠️ Tecnologias
+## Tecnologias
 
 * **Runtime**: Node.js (v18 ou superior).
 * **Banco de Dados**: PostgreSQL rodando via Docker.
 * **Segurança**: Autenticação via JWT (JSON Web Token).
 * **Testes**: Cypress para automação E2E (End-to-End).
 
-## 🚀 Como Executar
+## Como Executar
 
 ### Passo a Passo
 
@@ -53,7 +53,7 @@ O projeto utiliza **npm workspaces** para gerenciar as camadas da aplicação em
     ```
     *Utiliza o `concurrently` para subir os dois serviços em um único terminal.*
 
-## 🧪 Testes Automatizados
+## Testes Automatizados
 
 Com a aplicação em execução, utilize os comandos abaixo na raiz para rodar os testes:
 
