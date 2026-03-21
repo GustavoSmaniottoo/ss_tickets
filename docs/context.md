@@ -1,5 +1,5 @@
 # SS Tickets - Contexto do Projeto (Atualizado)
-Atualizado em 2026-03-04.
+Atualizado em 2026-03-20.
 
 ## Visao geral
 - Monorepo Node.js com backend em Express, frontend React/Vite e testes E2E com Cypress.
@@ -101,6 +101,7 @@ Atualizado em 2026-03-04.
     - React Router com rotas publicas: /, /login, /cadastro.
     - Rotas privadas: /meus-chamados e /fila-global via ProtectedRoute.
     - ProtectedRoute verifica token no localStorage.
+    - Rotas privadas ainda sao stubs (divs simples).
 
 ### Paginas
 - pages/Home.jsx
@@ -111,13 +112,19 @@ Atualizado em 2026-03-04.
 - pages/Cadastro.jsx
     - Cadastro via Axios em /usuarios com perfil_id padrao 1.
     - Redireciona para /login apos sucesso.
+    - Telas de tickets (lista/detalhe) ainda nao implementadas.
 
 ### API e bootstrap
 - api/api.js
-    - Axios com baseURL http://localhost:3000.
+    - Axios com baseURL hardcoded em http://localhost:3000.
     - Interceptor injeta Authorization Bearer com token do localStorage.
 - main.jsx
     - Renderiza App em StrictMode.
+
+## Fluxo de autenticacao (frontend)
+- Login salva o JWT em localStorage com a chave token.
+- ProtectedRoute checa token e redireciona para /login se ausente.
+- Axios injeta o header Authorization: Bearer <token> em cada request.
 
 ### Health check
 - GET /health
@@ -163,7 +170,7 @@ Atualizado em 2026-03-04.
 
 ## TODO / Roadmap
 - Ver TODO.md para progresso de infra, backend e front-end.
-- Nota: o frontend ja possui setup Vite + telas basicas (home/login/cadastro) e integracao com a API.
+- Nota: o frontend possui setup Vite + telas basicas (home/login/cadastro), mas as rotas privadas ainda sao stubs.
 
 ## Copia completa - app e controllers
 

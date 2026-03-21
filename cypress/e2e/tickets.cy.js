@@ -182,4 +182,63 @@ describe('Testes API- Módulo de Tickets', () => {
 
 	})
 
+	it('Deve impedir Solicitante de alterar status para valores não permitidos (RN02)', () => {
+
+		const payloadSolicitante = {
+			nome: 'Solicitante Teste RN02',
+			email: 'solicitante.rn02@teste.com.br',
+			senha: '123456',
+			perfil_id: 1
+		}
+
+		cy.createUsuario(payloadSolicitante).then(() => {
+			cy.apiLogin(payloadSolicitante.email, payloadSolicitante.senha).then((tokenSolicitante) => {
+				cy.createTicket(payloadTicket, token).then((response) => { // uso o token Admin pra criar
+					expect(response.status).to.equal(201)
+					const ticketId = response.body.id;
+
+					cy.request({
+						method: 'PATCH',
+						url: `/tickets/${ticketId}`,
+						failOnStatusCode: false,
+						headers: { Authorization: `Bearer ${tokenSolicitante}` }, // mas o PATCH é com o token do Solicitante
+						body: { status: 'Em atendimento' }
+					}).then((res) => {
+						expect(res.status).to.equal(403)
+						expect(res.body.error).to.equal('Acesso negado. Você não tem permissão para alterar o ticket para esse Status.')
+					})
+				})
+			})
+		})
+	})
+
+	it('Deve permitir Solicitante alterar status apenas para Fechado (RN02)', () => {
+
+		const payloadSolicitante = {
+			nome: 'Solicitante Teste RN02',
+			email: 'solicitante.rn02@teste.com.br',
+			senha: '123456',
+			perfil_id: 1
+		}
+
+		cy.createUsuario(payloadSolicitante).then(() => {
+			cy.apiLogin(payloadSolicitante.email, payloadSolicitante.senha).then((tokenSolicitante) => {
+				cy.createTicket(payloadTicket, token).then((response) => {
+					expect(response.status).to.equal(201)
+					const ticketId = response.body.id;
+
+					cy.request({
+						method: 'PATCH',
+						url: `/tickets/${ticketId}`,
+						headers: { Authorization: `Bearer ${tokenSolicitante}` },
+						body: { status: 'Fechado' }
+					}).then((res) => {
+						expect(res.status).to.equal(200)
+						expect(res.body.status).to.equal('Fechado')
+					})
+				})
+			})
+		})
+	})
+
 })

@@ -33,10 +33,6 @@ const db = require('../config/db')
                 //faço a verificação se o autor (usuário) existe
                 const usuarioExist = await db.query('select id from usuarios where id = $1', [autor_id]);
 
-                if (usuarioExist.rowCount === 0) {
-                    return res.status(400).json({ error: "O autor (usuário) informado não existe." });
-                }
-
                 if(ticketExist.rowCount === 0){ //o RowCount informa quantas linhas foram retornadas na consulta
                     return res.status(400).json({error: "O ticket informado não existe."})
                 }

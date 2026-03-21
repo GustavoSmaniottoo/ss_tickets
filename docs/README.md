@@ -1,28 +1,34 @@
-# SS Tickets - Gestão de Chamados
+# SS Tickets 
 
-O SS Tickets é um projeto fullstack focado nos fundamentos do desenvolvimento e qualidade de software (SDET focus). A proposta é uma implementação enxuta e totalmente documentada, priorizando o "básico bem feito" para garantir um sistema simples, estável e escalável.
+O SS Tickets nasceu de um momento de introspecção.
+
+Como eu faço pra colocar em prática as coisas que aprendo em cursos, na faculdade, nos estudos pra CTFL?
+
+Pensei em criar algo que eu domino o fluxo por completo, e como eu passei grande parte da minha carreira atendendo e resolvendo tickets, por que não construir um sistema nessa linha?
+
+A ideia virou rascunho, o rascunho virou projeto, e após algumas elaborações e refinamentos usando IA pra organizar o caminho, aqui estamos.
+
+Um sistema de gestão de chamados fullstack, construído do zero, com backend, frontend e testes automatizados com Cypress.
+
+Mas com uma regra de ouro: **Nenhum código entra no projeto sem antes eu entender e conseguir explicar o que ele faz.**
+
+> Stack: Node.js · Express · PostgreSQL · React · Vite · Cypress · JWT · Docker
 
 ## Documentação de Apoio
+
+Antes de escrever qualquer código, o projeto passou por uma fase de análise e especificação.
+
+Os requisitos foram levantados e organizados em Requisitos Funcionais (RF), Não-Funcionais (RNF) e Regras de Negócio (RN), o mesmo modelo usado em análise de sistemas.
+
+A partir desses requisitos, os cenários de teste foram escritos em formato Gherkin (BDD), servindo tanto como guia de desenvolvimento quanto como base para a automação no Cypress.
+
+> Na prática, a API REST saiu antes das specs formais. O BDD veio da necessidade de organizar o que já havia sido construído e estabelecer uma base clara para o desenvolvimento do frontend, que é a camada com que tenho menos familiaridade.
+
 
 Acesse a documentação detalhada na pasta `/docs`:
 
 * **[Especificação de Requisitos](/docs/requirements.md)**: Organização de Requisitos Funcionais (RF), Não-Funcionais (RNF) e Regras de Negócio (RN).
 * **[Especificação de Comportamento (BDD)](/docs/specs.md)**: Cenários de teste em formato Gherkin que servem como guia para o desenvolvimento e para a automação no Cypress.
-
-## Estrutura do Projeto (Monorepo)
-
-O projeto utiliza **npm workspaces** para gerenciar as camadas da aplicação em um único repositório:
-
-* **`packages/backend`**: API RESTful desenvolvida com Node.js e Express.
-* **`packages/frontend`**: Interface SPA moderna utilizando React e Vite.
-* **`cypress/`**: Suíte de testes automatizados integrada.
-
-## Tecnologias
-
-* **Runtime**: Node.js (v18 ou superior).
-* **Banco de Dados**: PostgreSQL rodando via Docker.
-* **Segurança**: Autenticação via JWT (JSON Web Token).
-* **Testes**: Cypress para automação E2E (End-to-End).
 
 ## Como Executar
 

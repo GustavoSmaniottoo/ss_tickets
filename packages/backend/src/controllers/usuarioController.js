@@ -84,6 +84,11 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
     getUsuarios: async (req, res) => {
        
         try {
+
+        // Apenas Analistas (2) e Admins (3) podem listar usuários
+        if (req.usuarioPerfil === 1) {
+            return res.status(403).json({ error: "Acesso negado. Apenas Analistas e Admins podem listar usuários." });
+        }
             //faço um select no banco, ja com join pra trazer o nome do perfil
             const result = await db.query(`select u.id,
                                             u.nome as usuario_nome,
@@ -111,6 +116,10 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
 
             if(isNaN(usuarioId)){
                 return res.status(400).json({error: "ID do usuário inválido, verifique!"})
+            }
+
+            if (req.usuarioPerfil === 1 && req.usuarioId !== parseInt(usuarioId)) {
+                return res.status(403).json({ error: "Acesso negado. Você só pode consultar seus próprios dados." });
             }
 
             //crio a variavel result, para armazenar a query

@@ -81,6 +81,10 @@ const ticketController = {
 
     getTickets: async (req, res) => { //função para buscar todos os tickets no banco de dados
         try{
+
+            const { sem_analista } = req.query;
+            const whereClause = sem_analista === 'true' ? 'WHERE t.analista_id IS NULL' : '';
+
             const result = await db.query(`select t.id,
                                             t.solicitante_id,
                                             u.nome as solicitante_nome,
@@ -93,7 +97,9 @@ const ticketController = {
                                             t.created_at
                                         from tickets t
                                         join usuarios u on u.id = t.solicitante_id
-                                        left join usuarios a on a.id = t.analista_id`)
+                                        left join usuarios a on a.id = t.analista_id
+                                        ${whereClause}
+                                        ORDER BY t.created_at ASC`)
                                         
             //crio uma const result que armazena o resultado da consulta ao banco
             return res.status(200).json(result.rows) //passo o resultado para o cliente em formato JSON e status 200 (OK)
@@ -149,14 +155,33 @@ const ticketController = {
                 return res.status(400).json({error: "ID do ticket inválido, tem certeza que isso é um número de ticket?"})
             }
 
-             //faço a verificação se o ticket existe
-            const ticketExist = await db.query('select id from tickets where id = $1', [ticketId]);
+            const { acao, status } = req.body;
 
-             if(ticketExist.rowCount === 0){ //o RowCount informa quantas linhas foram retornadas na consulta
-                return res.status(400).json({error: "O ticket informado não existe."})
+            //faço a verificação se o ticket existe
+            const ticketExist = await db.query('SELECT id, analista_id, status FROM tickets WHERE id = $1', [ticketId]);
+            const ticketAtual = ticketExist.rows[0];
+
+            if (acao === 'assumir') {
+                if (req.usuarioPerfil === 1) {
+                    return res.status(403).json({ error: "Acesso negado. Solicitantes não podem assumir tickets." });
+                }
+
+                const novoStatus = ticketAtual.analista_id === null ? 'Em atendimento' : ticketAtual.status;
+
+                const result = await db.query(`
+                    UPDATE tickets
+                    SET analista_id = $1, status = $2
+                    WHERE id = $3
+                    RETURNING *
+                `, [req.usuarioId, novoStatus, ticketId]);
+
+                return res.status(200).json(result.rows[0]);
             }
 
-            const {status} = req.body; //e o que vai ser alterado (status) eu pego do body da requisicao
+            if (req.usuarioPerfil === 1 && req.body.status !== 'Fechado') { 
+                return res.status(403).json({ error: "Acesso negado. Você não tem permissão para alterar o ticket para esse Status." });
+            } //se o perfil do usuário for 1 (cliente) e ele tentar alterar o status para algo diferente de "Fechado", retorno erro 403 (forbidden) pro cliente, porque só pode alterar para "Fechado"
+
             const statuspermitidos = ['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Respondido', 'Tratativa Interna', 'Resolvido', 'Fechado']
 
             if(!statuspermitidos.includes(status)){

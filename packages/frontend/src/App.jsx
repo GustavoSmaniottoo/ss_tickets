@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro.jsx';
 import Home from './pages/Home';
+import MeusChamados from './pages/MeusChamados';
 
 // Esta função Protege as rotas.
 // Ela verifica se existe um token no navegador antes de deixar o usuário entrar.
@@ -31,7 +32,7 @@ function App() {
           path="/meus-chamados" 
           element={
             <ProtectedRoute>
-              <div>Tela de Chamados (Solicitante)</div>
+                <MeusChamados />
             </ProtectedRoute>
           } 
         />
