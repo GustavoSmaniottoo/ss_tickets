@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Cadastro from './pages/Cadastro.jsx';
 import Home from './pages/Home';
 import MeusChamados from './pages/MeusChamados';
+import FilaGlobal from './pages/FilaGlobal';
 
 // Esta função Protege as rotas.
 // Ela verifica se existe um token no navegador antes de deixar o usuário entrar.
@@ -37,13 +38,13 @@ function App() {
           } 
         />
         
-        <Route 
-          path="/fila-global" 
+        <Route
+          path="/fila-global"
           element={
             <ProtectedRoute>
-              <div>Tela de Fila (Analista)</div>
+              <FilaGlobal />
             </ProtectedRoute>
-          } 
+          }
         />
 
         {/* Redirecionamento padrão: Qualquer rota desconhecida vai para o Login */}

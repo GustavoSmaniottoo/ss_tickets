@@ -19,7 +19,7 @@ const db = require('../config/db')
                     return res.status(400).json({error: "O conteúdo da nota não pode estar vazio."})
                 }
 
-                if(isNaN(ticket_id)){
+                if(!Number.isInteger(Number(ticket_id)) || Number(ticket_id) <= 0){
                     return res.status(400).json({error: "O ID do ticket deve ser numérico."})
                 }
 
@@ -27,17 +27,13 @@ const db = require('../config/db')
                     return res.status(400).json({error: "A nota excede o limite de 5000 caracteres."})
                 }
 
-                //faço a verificação se o ticket existe e se o status dele permite adicionar notas
                 const ticketExist = await db.query('select id, status from tickets where id = $1', [ticket_id]);
-                
-                //faço a verificação se o autor (usuário) existe
-                const usuarioExist = await db.query('select id from usuarios where id = $1', [autor_id]);
 
                 if(ticketExist.rowCount === 0){ //o RowCount informa quantas linhas foram retornadas na consulta
-                    return res.status(400).json({error: "O ticket informado não existe."})
+                    return res.status(404).json({error: "O ticket informado não existe."})
                 }
 
-                if(ticketExist.rows[0].status == 'Resolvido'|| ticketExist.rows[0].status === 'Fechado'){//estou usando o 403 pq o ticket existe, mas o status não permite a ação
+                if(ticketExist.rows[0].status === 'Resolvido' || ticketExist.rows[0].status === 'Fechado'){//estou usando o 403 pq o ticket existe, mas o status não permite a ação
                     return res.status(403).json({error: `Não é possível adicionar notas a um ticket com status ${ticketExist.rows[0].status}.`})
                 }
 
@@ -69,14 +65,14 @@ const db = require('../config/db')
 
                 const {ticket_id} = req.params;
 
-                if(isNaN(ticket_id)){
+                if(!Number.isInteger(Number(ticket_id)) || Number(ticket_id) <= 0){
                     return res.status(400).json({error: "O ID do ticket é obrigatório e deve ser um número válido."})
                 }
 
                 const ticketExist = await db.query('select id, status from tickets where id = $1', [ticket_id]);
 
                 if(ticketExist.rowCount === 0){ //o RowCount informa quantas linhas foram retornadas na consulta
-                    return res.status(400).json({error: "O ticket informado não existe."})
+                    return res.status(404).json({error: "O ticket informado não existe."})
                 }
 
                 const query = `SELECT

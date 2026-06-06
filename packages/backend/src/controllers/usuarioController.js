@@ -23,9 +23,12 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
             return res.status(400).json({error: "Todos os campos são obrigatórios."});//se algum campo estiver vazio, retorno um erro 400 (bad request) com uma mensagem de erro
         }
 
-         //valido se a senha possui pelo menos 6 caracteres
+         //valido se a senha possui entre 6 e 128 caracteres — limite superior evita DoS via bcrypt
         if (senha.length < 6) {
-            return res.status(400).json({ error: "A senha deve ter pelo menos 6 caracteres." });                            
+            return res.status(400).json({ error: "A senha deve ter pelo menos 6 caracteres." });
+        }
+        if (senha.length > 128) {
+            return res.status(400).json({ error: "A senha não pode ter mais de 128 caracteres." });
         }
 
         //valido se o email é válido (simples validação)
@@ -114,7 +117,7 @@ const usuarioController = { //a constante vai ser um objeto que contém várias 
         try{
             const usuarioId = req.params.id //pego o id nos parametros da requisição
 
-            if(isNaN(usuarioId)){
+            if(!Number.isInteger(Number(usuarioId)) || Number(usuarioId) <= 0){
                 return res.status(400).json({error: "ID do usuário inválido, verifique!"})
             }
 

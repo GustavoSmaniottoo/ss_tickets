@@ -1,23 +1,8 @@
 import React, { useState } from 'react';
 import api from '../api/api';
 import { useNavigate } from 'react-router-dom';
+import { decodeToken } from '../utils/auth';
 
-// Decodifica o payload do JWT sem biblioteca externa.
-// O token é composto por 3 partes separadas por ponto: header.payload.signature
-// O payload é base64url — diferente do base64 padrão, usa '-' e '_' no lugar de '+' e '/'
-// Por isso substituímos antes de passar pro atob()
-const decodeToken = (token) => {
-    try {
-        const payload = token.split('.')[1];
-        return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-    } catch {
-        return null; // Se o token for inválido ou malformado, retorna null com segurança
-    }
-};
-
-// Mapa de redirecionamento por perfil_id conforme RF01/RF02
-// perfil_id 1 = Solicitante → vai para seus próprios chamados
-// perfil_id 2 = Analista    → vai para a fila global de atendimento
 const ROTAS_POR_PERFIL = {
     1: '/meus-chamados',
     2: '/fila-global',

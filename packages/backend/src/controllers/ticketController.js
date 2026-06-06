@@ -83,7 +83,20 @@ const ticketController = {
         try{
 
             const { sem_analista } = req.query;
-            const whereClause = sem_analista === 'true' ? 'WHERE t.analista_id IS NULL' : '';
+            const conditions = [];
+            const params = [];
+
+            // Solicitante só visualiza os próprios tickets (RN-ACESSO-02)
+            if (req.usuarioPerfil === 1) {
+                params.push(req.usuarioId);
+                conditions.push(`t.solicitante_id = $${params.length}`);
+            }
+
+            if (sem_analista === 'true') {
+                conditions.push('t.analista_id IS NULL');
+            }
+
+            const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
             const result = await db.query(`select t.id,
                                             t.solicitante_id,
@@ -99,15 +112,13 @@ const ticketController = {
                                         join usuarios u on u.id = t.solicitante_id
                                         left join usuarios a on a.id = t.analista_id
                                         ${whereClause}
-                                        ORDER BY t.created_at ASC`)
-                                        
-            //crio uma const result que armazena o resultado da consulta ao banco
-            return res.status(200).json(result.rows) //passo o resultado para o cliente em formato JSON e status 200 (OK)
-            //uso o . para acessar a propriedade rows do result que contém a lista de tickets
-        } catch (error) { //caso ocorra algum erro na consulta ao banco, o catch captura esse erro
-            
-            console.error("Erro ao buscar tickets:", error);//uso o .error para exibir o erro no console do servidor
-            return res.status(500).json({error: "Erro ao buscar a lista de tickets."})//e retorno um erro 500 pro cliente, com a mensagem de erro no formato JSON
+                                        ORDER BY t.created_at ASC`, params)
+
+            return res.status(200).json(result.rows)
+        } catch (error) {
+
+            console.error("Erro ao buscar tickets:", error);
+            return res.status(500).json({error: "Erro ao buscar a lista de tickets."})
         }
     },
 
@@ -116,8 +127,8 @@ const ticketController = {
 
             const {ticketId} = req.params; //pego o id do ticket dos parametros da requisicao
 
-            if(isNaN(ticketId)){ //verifico se o id nao é um numero
-                return  res.status(400).json({ error: "ID do ticket inválido, tem certeza que isso é um número de ticket?" });//retorno erro 400 (bad request) pro cliente
+            if(!Number.isInteger(Number(ticketId)) || Number(ticketId) <= 0){
+                return  res.status(400).json({ error: "ID do ticket inválido, tem certeza que isso é um número de ticket?" });
             }
             //faço a consulta ao banco para buscar o ticket com o ID especificado, a const entre colchetes é um array com os valores para os placeholders
                 const result = await db.query(`select t.id,
@@ -151,15 +162,23 @@ const ticketController = {
 
             const {ticketId} = req.params; //pego o ID do ticket dos parametros da requisicao
 
-            if(isNaN(ticketId)){
+            if(!Number.isInteger(Number(ticketId)) || Number(ticketId) <= 0){
                 return res.status(400).json({error: "ID do ticket inválido, tem certeza que isso é um número de ticket?"})
             }
 
             const { acao, status } = req.body;
 
-            //faço a verificação se o ticket existe
-            const ticketExist = await db.query('SELECT id, analista_id, status FROM tickets WHERE id = $1', [ticketId]);
+            const ticketExist = await db.query('SELECT id, solicitante_id, analista_id, status FROM tickets WHERE id = $1', [ticketId]);
             const ticketAtual = ticketExist.rows[0];
+
+            if (!ticketAtual) {
+                return res.status(404).json({ error: "Ticket não encontrado." });
+            }
+
+            const STATUS_FINALIZADOS = ['Resolvido', 'Fechado'];
+            if (STATUS_FINALIZADOS.includes(ticketAtual.status)) {
+                return res.status(403).json({ error: "Ticket encerrado. Não é possível alterar tickets com status Resolvido ou Fechado." });
+            }
 
             if (acao === 'assumir') {
                 if (req.usuarioPerfil === 1) {
@@ -178,9 +197,14 @@ const ticketController = {
                 return res.status(200).json(result.rows[0]);
             }
 
-            if (req.usuarioPerfil === 1 && req.body.status !== 'Fechado') { 
-                return res.status(403).json({ error: "Acesso negado. Você não tem permissão para alterar o ticket para esse Status." });
-            } //se o perfil do usuário for 1 (cliente) e ele tentar alterar o status para algo diferente de "Fechado", retorno erro 403 (forbidden) pro cliente, porque só pode alterar para "Fechado"
+            if (req.usuarioPerfil === 1) {
+                if (status !== 'Fechado') {
+                    return res.status(403).json({ error: "Acesso negado. Você não tem permissão para alterar o ticket para esse Status." });
+                }
+                if (ticketAtual.solicitante_id !== req.usuarioId) {
+                    return res.status(403).json({ error: "Acesso negado. Você só pode fechar seus próprios tickets." });
+                }
+            }
 
             const statuspermitidos = ['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Respondido', 'Tratativa Interna', 'Resolvido', 'Fechado']
 
@@ -188,12 +212,15 @@ const ticketController = {
                 return res.status(400).json({error: 'Status inválido. Escolha um dos status permitidos para o ticket. ' , Status: statuspermitidos})
             }
 
-            //faço o update de Status
             const query = `update tickets set status = $1 where id = $2 returning *`
 
             const values = [status, ticketId]
 
             const result = await db.query(query, values)
+
+            if (!result.rows[0]) {
+                return res.status(404).json({ error: "Ticket não encontrado." });
+            }
 
             return res.status(200).json(result.rows[0])
 

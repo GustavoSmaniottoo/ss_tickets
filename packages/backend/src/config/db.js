@@ -18,8 +18,9 @@ const pool = new Pool({
 //aqui eu exporto apenas a função query da pool de conexões criada acima, para evitar expor dados sensíveis e outas funcionalidades
 module.exports = {
   query: (text, params) => pool.query(text, params),
-/** basicamente crio uma função query que recebe o comando SQL (text) e os parâmetros (params) e chama a função query da pool de conexões criada acima 
+/** basicamente crio uma função query que recebe o comando SQL (text) e os parâmetros (params) e chama a função query da pool de conexões criada acima
 * A pool de conexões vai substituir os placeholders pelos valores reais do array params, protegendo contra SQL Injection
 * Exemplo: 'INSERT INTO tickets (titulo, prioridade) VALUES ($1, $2)' e ['Erro no Sistema', 'P1']
 * O PostgreSQL se encarrega de substituir cada $N pela posição respectiva do array*/
+  close: () => pool.end(), // encerra a pool de conexões — usado no graceful shutdown
 };

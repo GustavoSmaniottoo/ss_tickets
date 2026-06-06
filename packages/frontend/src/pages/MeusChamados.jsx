@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/api';
+import { decodeToken } from '../utils/auth';
+import PrioridadeBadge from '../components/PrioridadeBadge';
+import ModalTicket from '../components/ModalTicket';
+
+const STATUS_FINALIZADOS = ['Resolvido', 'Fechado'];
 
 const MeusChamados = () => {
     const [tickets, setTickets] = useState([]);
+    const [mostrarFormulario, setMostrarFormulario] = useState(false);
     const [titulo, setTitulo] = useState('');
     const [descricao, setDescricao] = useState('');
-    const [prioridade, setPrioridade] = useState('P2'); // Valor padrão P2
+    const [prioridade, setPrioridade] = useState('P2');
     const [mensagem, setMensagem] = useState('');
     const [erro, setErro] = useState('');
+    const [ticketSelecionado, setTicketSelecionado] = useState(null);
 
-    // Busca os tickets do solicitante ao carregar a página
+    const token = localStorage.getItem('token');
+    const perfil = decodeToken(token)?.perfil;
+
     const carregarTickets = async () => {
         try {
             const response = await api.get('/tickets');
@@ -28,98 +37,178 @@ const MeusChamados = () => {
         setErro('');
         setMensagem('');
 
-        // Validação no frontend antes de chamar o backend (RN01)
-        // O backend também bloqueia com 400, mas evitamos a chamada desnecessária
         if (titulo.trim().length < 10) {
             setErro('O título deve ter no mínimo 10 caracteres.');
             return;
         }
 
         try {
-            // O solicitante_id é extraído do token pelo backend (req.usuarioId)
-            // Não precisamos enviar o id do usuário no body
             await api.post('/tickets', { titulo, descricao, prioridade });
-
             setMensagem('Ticket criado com sucesso!');
             setTitulo('');
             setDescricao('');
             setPrioridade('P2');
-
-            // Recarrega a lista após criar
+            // Fecha o formulário automaticamente após criar
+            setMostrarFormulario(false);
             carregarTickets();
         } catch (error) {
-            // Exibe o erro retornado pelo backend (ex: título inválido → 400)
-            const msgErro = error.response?.data?.error || 'Erro ao criar ticket.';
-            setErro(msgErro);
+            setErro(error.response?.data?.error || 'Erro ao criar ticket.');
         }
     };
 
+    const handleAbrirFormulario = () => {
+        setMostrarFormulario((v) => !v);
+        setErro('');
+        setMensagem('');
+    };
+
+    const handleTicketAtualizado = (ticketAtualizado) => {
+        setTickets((prev) =>
+            prev.map((t) => (t.id === ticketAtualizado.id ? ticketAtualizado : t))
+        );
+        setTicketSelecionado(ticketAtualizado);
+    };
+
     return (
-        <div style={{ padding: '20px', maxWidth: '700px', margin: 'auto' }}>
-            <h2>Meus Chamados</h2>
+        <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto' }}>
 
-            {/* Formulário de criação de ticket */}
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Título:</label>
-                    <input
-                        type="text"
-                        value={titulo}
-                        onChange={(e) => setTitulo(e.target.value)}
-                        placeholder="Mínimo 10 caracteres"
-                        data-cy="ticket-titulo"
-                        required
-                    />
-                </div>
-
-                <div style={{ marginTop: '10px' }}>
-                    <label>Descrição:</label>
-                    <textarea
-                        value={descricao}
-                        onChange={(e) => setDescricao(e.target.value)}
-                        placeholder="Descreva o problema..."
-                        data-cy="ticket-descricao"
-                        rows={4}
-                    />
-                </div>
-
-                {/* Campo prioridade exigido pelo backend (P1, P2, P3) */}
-                <div style={{ marginTop: '10px' }}>
-                    <label>Prioridade:</label>
-                    <select
-                        value={prioridade}
-                        onChange={(e) => setPrioridade(e.target.value)}
-                        data-cy="ticket-prioridade"
-                    >
-                        <option value="P1">P1 — Alta</option>
-                        <option value="P2">P2 — Média</option>
-                        <option value="P3">P3 — Baixa</option>
-                    </select>
-                </div>
-
-                <button type="submit" style={{ marginTop: '15px' }} data-cy="ticket-submit">
-                    Abrir Chamado
+            {/* Cabeçalho com botão de abrir chamado em destaque */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0 }}>Meus Chamados</h2>
+                <button
+                    onClick={handleAbrirFormulario}
+                    data-cy="btn-abrir-chamado"
+                    style={{
+                        padding: '8px 16px',
+                        backgroundColor: mostrarFormulario ? 'transparent' : '#6366f1',
+                        color: mostrarFormulario ? '#9ca3af' : '#fff',
+                        border: `1px solid ${mostrarFormulario ? '#444' : '#6366f1'}`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                    }}
+                >
+                    {mostrarFormulario ? 'Cancelar' : '+ Abrir novo chamado'}
                 </button>
-            </form>
+            </div>
 
-            {/* Feedback de sucesso ou erro */}
-            {mensagem && <p style={{ color: 'green' }} data-cy="ticket-mensagem">{mensagem}</p>}
-            {erro && <p style={{ color: 'red' }} data-cy="ticket-erro">{erro}</p>}
+            {/* Formulário de criação — oculto por padrão, abre via botão */}
+            {mostrarFormulario && (
+                <div style={{ border: '1px solid #333', borderRadius: '6px', padding: '16px', marginBottom: '24px', backgroundColor: '#161616' }}>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '15px' }}>Novo chamado</h3>
+                    <form onSubmit={handleSubmit}>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#9ca3af' }}>
+                                Título
+                            </label>
+                            <input
+                                type="text"
+                                value={titulo}
+                                onChange={(e) => setTitulo(e.target.value)}
+                                placeholder="Mínimo 10 caracteres"
+                                data-cy="ticket-titulo"
+                                required
+                                style={{ width: '100%', boxSizing: 'border-box' }}
+                            />
+                        </div>
+                        <div style={{ marginTop: '10px' }}>
+                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#9ca3af' }}>
+                                Descrição
+                            </label>
+                            <textarea
+                                value={descricao}
+                                onChange={(e) => setDescricao(e.target.value)}
+                                placeholder="Descreva o problema..."
+                                data-cy="ticket-descricao"
+                                rows={4}
+                                style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
+                            />
+                        </div>
+                        <div style={{ marginTop: '10px' }}>
+                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#9ca3af' }}>
+                                Prioridade
+                            </label>
+                            <select
+                                value={prioridade}
+                                onChange={(e) => setPrioridade(e.target.value)}
+                                data-cy="ticket-prioridade"
+                            >
+                                <option value="P1">P1 — Crítica</option>
+                                <option value="P2">P2 — Média</option>
+                                <option value="P3">P3 — Baixa</option>
+                            </select>
+                        </div>
+                        <button type="submit" style={{ marginTop: '15px' }} data-cy="ticket-submit">
+                            Abrir Chamado
+                        </button>
+                    </form>
 
-            {/* Lista de tickets */}
-            <hr style={{ margin: '30px 0' }} />
-            <h3>Chamados Abertos</h3>
+                    {mensagem && (
+                        <p style={{ color: '#10b981', marginTop: '8px', fontSize: '13px' }} data-cy="ticket-mensagem">
+                            {mensagem}
+                        </p>
+                    )}
+                    {erro && (
+                        <p style={{ color: '#ef4444', marginTop: '8px', fontSize: '13px' }} data-cy="ticket-erro">
+                            {erro}
+                        </p>
+                    )}
+                </div>
+            )}
 
+            {/* Lista de tickets — view principal ao entrar na tela */}
             {tickets.length === 0 ? (
                 <p data-cy="ticket-lista-vazia">Nenhum chamado encontrado.</p>
             ) : (
-                <ul data-cy="ticket-lista">
-                    {tickets.map((ticket) => (
-                        <li key={ticket.id} data-cy={`ticket-item-${ticket.id}`}>
-                            <strong>{ticket.titulo}</strong> — Status: {ticket.status} — Prioridade: {ticket.prioridade} — Solicitante: {ticket.solicitante_nome}
-                        </li>
-                    ))}
+                <ul style={{ listStyle: 'none', padding: 0 }} data-cy="ticket-lista">
+                    {tickets.map((ticket) => {
+                        const finalizado = STATUS_FINALIZADOS.includes(ticket.status);
+                        return (
+                            <li
+                                key={ticket.id}
+                                onClick={() => setTicketSelecionado(ticket)}
+                                data-cy={`ticket-item-${ticket.id}`}
+                                style={{
+                                    border: '1px solid #333',
+                                    borderRadius: '6px',
+                                    padding: '12px 16px',
+                                    marginBottom: '8px',
+                                    opacity: finalizado ? 0.65 : 1,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <div>
+                                    <strong style={{ fontSize: '14px' }}>
+                                        {finalizado && (
+                                            <span style={{ marginRight: '6px', fontSize: '12px' }}>🔒</span>
+                                        )}
+                                        {ticket.titulo}
+                                    </strong>
+                                    <div style={{ marginTop: '5px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                        <PrioridadeBadge prioridade={ticket.prioridade} />
+                                        <span style={{ fontSize: '13px', color: '#9ca3af' }}>{ticket.status}</span>
+                                    </div>
+                                </div>
+                                {/* Seta indicando que o item é clicável */}
+                                <span style={{ color: '#4b5563', fontSize: '20px', marginLeft: '12px' }}>›</span>
+                            </li>
+                        );
+                    })}
                 </ul>
+            )}
+
+            {/* Modal fullscreen ao clicar em um ticket da lista */}
+            {ticketSelecionado && (
+                <ModalTicket
+                    ticket={ticketSelecionado}
+                    perfil={perfil}
+                    onTicketAtualizado={handleTicketAtualizado}
+                    onFechar={() => setTicketSelecionado(null)}
+                />
             )}
         </div>
     );
